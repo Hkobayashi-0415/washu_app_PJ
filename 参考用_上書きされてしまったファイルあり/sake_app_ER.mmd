@@ -1,0 +1,61 @@
+Diagram
+    sake {
+        int sake_id PK
+        text name
+        int brewery_id FK
+        text type
+        decimal abv
+        decimal nihonshudo
+        decimal acidity
+        text[] taste_tags
+        text description
+        text image_url
+        text official_url
+        boolean available
+    }
+
+    brewery {
+        int brewery_id PK
+        text name
+        text prefecture
+        text city
+        text description
+        text website
+    }
+
+    store {
+        int store_id PK
+        text name
+        text address
+        decimal lat
+        decimal lng
+        text website
+    }
+
+    store_sake {
+        int store_id FK
+        int sake_id FK
+        int price
+    }
+
+    user {
+        int user_id PK
+        text email
+        text password_hash
+        text plan
+        timestamp created_at
+    }
+
+    user_activity {
+        int activity_id PK
+        int user_id FK
+        int sake_id FK
+        text type
+        timestamp created_at
+    }
+
+    brewery ||--o{ sake : "produces"
+    sake ||--o{ store_sake : "listed in"
+    store ||--o{ store_sake : "sells"
+    user ||--o{ user_activity : "performs"
+    sake ||--o{ user_activity : "related to"

@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>日本酒アプリ ワイヤーフレーム（MVP）</title>
+<style>
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif; margin:20px; background:#f7f7f8; color:#111 }
+  h1 { text-align:center; }
+  .container { display:grid; grid-template-columns: repeat(2, 1fr); gap:16px; max-width:1100px; margin: 0 auto; }
+  .card { background:white; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.06); padding:12px; }
+  .svg-wrap { width:100%; height:360px; }
+  .note { max-width:1100px; margin:18px auto; color:#444; font-size:14px; }
+</style>
+</head>
+<body>
+<h1>日本酒アプリ — ワイヤーフレーム（MVP）</h1>
+<p class="note">シンプル＆スタイリッシュなモノクロワイヤーフレーム。各画面はクリックして大きく表示できます（ブラウザで開いてください）。</p>
+<div class="container">
+  <!-- Home -->
+  <div class="card">
+    <svg class="svg-wrap" viewBox="0 0 400 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ホーム画面">
+      <rect x="8" y="8" width="384" height="704" rx="12" fill="#fff" stroke="#ddd"/>
+      <rect x="32" y="28" width="336" height="48" rx="6" fill="#fafafa" stroke="#ccc"/>
+      <text x="50%" y="56" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#333">ヘッダー（ロゴ）</text>
+      <rect x="32" y="92" width="336" height="56" rx="8" fill="#fff" stroke="#ccc"/>
+      <text x="52" y="122" font-size="12" fill="#666">検索バー（銘柄名、味、特徴で検索）</text>
+      <!-- tag shortcuts -->
+      <g>
+        <rect x="40" y="164" width="104" height="36" rx="6" fill="#fff" stroke="#ddd"/><text x="92" y="186" text-anchor="middle" font-size="12" fill="#333">辛口</text>
+        <rect x="156" y="164" width="104" height="36" rx="6" fill="#fff" stroke="#ddd"/><text x="208" y="186" text-anchor="middle" font-size="12" fill="#333">甘口</text>
+        <rect x="272" y="164" width="104" height="36" rx="6" fill="#fff" stroke="#ddd"/><text x="324" y="186" text-anchor="middle" font-size="12" fill="#333">フルーティー</text>
+      </g>
+      <!-- recommendations slider -->
+      <rect x="32" y="216" width="336" height="200" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="238" text-anchor="middle" font-size="12" fill="#666">おすすめ銘柄スライダー（画像＋簡易説明）</text>
+      <!-- footer -->
+      <rect x="24" y="628" width="352" height="68" rx="8" fill="#fff" stroke="#ddd"/>
+      <text x="80" y="662" font-size="12" fill="#333">ホーム</text>
+      <text x="200" y="662" font-size="12" fill="#666">お気に入り</text>
+      <text x="320" y="662" font-size="12" fill="#666">プロフィール</text>
+    </svg>
+  </div>
+
+  <!-- Search Results -->
+  <div class="card">
+    <svg class="svg-wrap" viewBox="0 0 400 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="検索結果画面">
+      <rect x="8" y="8" width="384" height="704" rx="12" fill="#fff" stroke="#ddd"/>
+      <rect x="32" y="28" width="336" height="48" rx="6" fill="#fafafa" stroke="#ccc"/>
+      <text x="50%" y="56" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#333">検索結果</text>
+      <!-- filter bar -->
+      <rect x="32" y="92" width="336" height="36" rx="6" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="116" text-anchor="middle" font-size="12" fill="#666">フィルター（都道府県 / 味タグ / 並び替え）</text>
+      <!-- result cards list -->
+      <g>
+        <rect x="32" y="144" width="336" height="80" rx="8" fill="#fff" stroke="#eee"/><text x="96" y="172" font-size="12" fill="#333">銘柄カード（画像左・テキスト右）</text>
+        <rect x="32" y="236" width="336" height="80" rx="8" fill="#fff" stroke="#eee"/><text x="96" y="264" font-size="12" fill="#333">銘柄カード</text>
+        <rect x="32" y="328" width="336" height="80" rx="8" fill="#fff" stroke="#eee"/><text x="96" y="356" font-size="12" fill="#333">銘柄カード</text>
+      </g>
+      <text x="50%" y="600" text-anchor="middle" font-size="12" fill="#999">無限スクロール or ページネーション</text>
+    </svg>
+  </div>
+
+  <!-- Detail -->
+  <div class="card">
+    <svg class="svg-wrap" viewBox="0 0 400 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="銘柄詳細画面">
+      <rect x="8" y="8" width="384" height="704" rx="12" fill="#fff" stroke="#ddd"/>
+      <rect x="32" y="28" width="336" height="48" rx="6" fill="#fafafa" stroke="#ccc"/>
+      <text x="50%" y="56" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#333">銘柄詳細</text>
+      <rect x="32" y="92" width="336" height="200" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="110" text-anchor="middle" font-size="12" fill="#666">大きな写真</text>
+      <text x="50%" y="320" text-anchor="middle" font-size="12" fill="#333">酒蔵名・味タグ（色分け）・日本酒度・酸度・ABV</text>
+      <rect x="32" y="360" width="336" height="200" rx="6" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="380" text-anchor="middle" font-size="12" fill="#666">詳細説明（受賞歴など）</text>
+      <rect x="32" y="572" width="336" height="36" rx="6" fill="#fff" stroke="#ddd"/>
+      <text x="50%" y="594" text-anchor="middle" font-size="12" fill="#333">購入リンク（公式EC）</text>
+    </svg>
+  </div>
+
+  <!-- Brewery -->
+  <div class="card">
+    <svg class="svg-wrap" viewBox="0 0 400 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="酒蔵詳細画面">
+      <rect x="8" y="8" width="384" height="704" rx="12" fill="#fff" stroke="#ddd"/>
+      <rect x="32" y="28" width="336" height="48" rx="6" fill="#fafafa" stroke="#ccc"/>
+      <text x="50%" y="56" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#333">酒蔵詳細</text>
+      <rect x="32" y="92" width="336" height="120" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="152" text-anchor="middle" font-size="12" fill="#666">酒蔵ロゴ・写真・所在地・公式サイト</text>
+      <rect x="32" y="228" width="336" height="320" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="368" text-anchor="middle" font-size="12" fill="#333">製造銘柄一覧（カード）</text>
+    </svg>
+  </div>
+
+  <!-- Store -->
+  <div class="card">
+    <svg class="svg-wrap" viewBox="0 0 400 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="販売店詳細画面">
+      <rect x="8" y="8" width="384" height="704" rx="12" fill="#fff" stroke="#ddd"/>
+      <rect x="32" y="28" width="336" height="48" rx="6" fill="#fafafa" stroke="#ccc"/>
+      <text x="50%" y="56" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#333">販売店詳細</text>
+      <rect x="32" y="92" width="336" height="160" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="152" text-anchor="middle" font-size="12" fill="#666">店舗写真 / 名前 / 住所</text>
+      <rect x="32" y="262" width="336" height="220" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="372" text-anchor="middle" font-size="12" fill="#333">取扱銘柄一覧</text>
+      <rect x="32" y="496" width="336" height="80" rx="6" fill="#fff" stroke="#ddd"/>
+      <text x="50%" y="532" text-anchor="middle" font-size="12" fill="#333">地図（埋め込み）</text>
+    </svg>
+  </div>
+
+  <!-- Profile -->
+  <div class="card">
+    <svg class="svg-wrap" viewBox="0 0 400 720" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="プロフィール画面">
+      <rect x="8" y="8" width="384" height="704" rx="12" fill="#fff" stroke="#ddd"/>
+      <rect x="32" y="28" width="336" height="48" rx="6" fill="#fafafa" stroke="#ccc"/>
+      <text x="50%" y="56" text-anchor="middle" dominant-baseline="middle" font-size="14" fill="#333">プロフィール</text>
+      <rect x="32" y="92" width="336" height="120" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="140" text-anchor="middle" font-size="12" fill="#666">ユーザー情報 / プラン</text>
+      <rect x="32" y="228" width="336" height="220" rx="8" fill="#fff" stroke="#eee"/>
+      <text x="50%" y="328" text-anchor="middle" font-size="12" fill="#333">お気に入り / 閲覧履歴</text>
+    </svg>
+  </div>
+
+</div>
+
+<p class="note">ファイルをご自身のブラウザで開いて、デザイン確認・スクリーンショット取得をしてください。</p>
+</body>
+</html>
