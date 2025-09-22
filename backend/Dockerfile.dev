@@ -1,0 +1,26 @@
+# 開発用Dockerfile for Washu App Backend
+# - ホットリロード対応
+# - 開発用依存関係インストール
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# システム依存関係をインストール
+RUN apt-get update && apt-get install -y \
+    gcc \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python依存関係をインストール
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバーを起動（ホットリロード対応）
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+

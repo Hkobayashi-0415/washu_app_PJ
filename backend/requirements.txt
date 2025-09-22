@@ -1,0 +1,41 @@
+# Washu App Backend Dependencies
+# Django and DRF
+Django==4.2.7
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.0
+django-cors-headers==4.3.1
+djoser==2.2.0
+
+# Database
+psycopg2-binary==2.9.7
+
+# Cache
+redis==5.0.1
+
+# Task Queue
+celery==5.3.4
+
+# Production Server
+gunicorn==21.2.0
+
+# Development Tools
+django-debug-toolbar==4.2.0
+django-extensions==3.2.3
+
+# Environment Variables
+python-decouple==3.8
+
+# API Documentation
+drf-spectacular==0.26.5
+
+# Testing
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+factory-boy==3.3.0
+
+# Code Quality
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+

@@ -1,0 +1,17 @@
+# Dependencies & build output
+node_modules
+.dist
+dist
+
+# Vite cache
+.vite
+
+# OS / Editor
+.DS_Store
+*.log
+.git
+.gitignore
+
+# Env
+.env
+.env.*

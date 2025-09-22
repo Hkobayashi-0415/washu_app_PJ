@@ -1,0 +1,104 @@
+# Washu App Makefile
+# Docker環境での開発・運用コマンド
+
+.PHONY: help build up down restart logs shell-frontend shell-backend shell-db clean test
+
+# デフォルトターゲット
+help:
+	@echo "Washu App - Available Commands:"
+	@echo ""
+	@echo "Development:"
+	@echo "  dev          - 開発環境を起動 (フロントエンド + データベース + Redis)"
+	@echo "  dev-full     - 完全な開発環境を起動 (フロントエンド + バックエンド + データベース + Redis)"
+	@echo "  build        - 全サービスのイメージをビルド"
+	@echo "  up           - 全サービスを起動"
+	@echo "  down         - 全サービスを停止"
+	@echo "  restart      - 全サービスを再起動"
+	@echo ""
+	@echo "Database:"
+	@echo "  db-shell     - データベースに接続"
+	@echo "  db-migrate   - データベースマイグレーション実行"
+	@echo "  db-seed      - 初期データ投入"
+	@echo ""
+	@echo "Development Tools:"
+	@echo "  shell-frontend - フロントエンドコンテナのシェル"
+	@echo "  shell-backend  - バックエンドコンテナのシェル"
+	@echo "  logs          - 全サービスのログ表示"
+	@echo "  logs-frontend - フロントエンドのログ表示"
+	@echo "  logs-backend  - バックエンドのログ表示"
+	@echo ""
+	@echo "Testing:"
+	@echo "  test          - 全テスト実行"
+	@echo "  test-frontend - フロントエンドテスト実行"
+	@echo "  test-backend  - バックエンドテスト実行"
+	@echo ""
+	@echo "Cleanup:"
+	@echo "  clean         - コンテナ・ボリューム・イメージを削除"
+	@echo "  clean-volumes - ボリュームのみ削除"
+
+# 開発環境 (フロントエンドのみ)
+dev:
+	docker-compose -f docker-compose.dev.yml up frontend db redis
+
+# 完全な開発環境 (フロントエンド + バックエンド)
+dev-full:
+	docker-compose -f docker-compose.dev.yml up
+
+# 本番環境
+build:
+	docker-compose build
+
+up:
+	docker-compose up -d
+
+down:
+	docker-compose down
+
+restart:
+	docker-compose restart
+
+# データベース操作
+db-shell:
+	docker-compose exec db psql -U washu_user -d washu_db
+
+db-migrate:
+	docker-compose exec backend python manage.py migrate
+
+db-seed:
+	docker-compose exec backend python manage.py loaddata initial_data.json
+
+# 開発ツール
+shell-frontend:
+	docker-compose -f docker-compose.dev.yml exec frontend sh
+
+shell-backend:
+	docker-compose -f docker-compose.dev.yml exec backend bash
+
+logs:
+	docker-compose logs -f
+
+logs-frontend:
+	docker-compose -f docker-compose.dev.yml logs -f frontend
+
+logs-backend:
+	docker-compose -f docker-compose.dev.yml logs -f backend
+
+# テスト
+test:
+	docker-compose -f docker-compose.dev.yml exec frontend npm test
+	docker-compose -f docker-compose.dev.yml exec backend python manage.py test
+
+test-frontend:
+	docker-compose -f docker-compose.dev.yml exec frontend npm test
+
+test-backend:
+	docker-compose -f docker-compose.dev.yml exec backend python manage.py test
+
+# クリーンアップ
+clean:
+	docker-compose down -v --rmi all
+	docker system prune -f
+
+clean-volumes:
+	docker-compose down -v
+

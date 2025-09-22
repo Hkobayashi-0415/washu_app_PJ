@@ -1,0 +1,19 @@
+# 開発用Dockerfile for Washu App Frontend
+# - ホットリロード対応
+# - 開発用依存関係インストール
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# パッケージファイルをコピーして依存関係をインストール
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバーを起動（ホットリロード対応）
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

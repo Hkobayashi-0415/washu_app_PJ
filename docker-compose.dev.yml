@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # フロントエンド開発用 (ホットリロード対応)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.auto
+      # 他のパッケージマネージャーを使用する場合は以下をコメントアウトして有効化
+      # dockerfile: Dockerfile.dev     # npmを使用する場合
+      # dockerfile: Dockerfile.yarn    # Yarnを使用する場合
+      # dockerfile: Dockerfile.pnpm    # pnpmを使用する場合
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:8000/api
+    command: npm run dev -- --host 0.0.0.0
+    networks:
+      - washu-network
+
+  # バックエンド開発用 (ホットリロード対応)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - DEBUG=True
+      - DATABASE_URL=postgresql://washu_user:washu_password@db:5432/washu_db
+      - REDIS_URL=redis://redis:6379/0
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+    depends_on:
+      - db
+      - redis
+    command: python manage.py runserver 0.0.0.0:8000
+    networks:
+      - washu-network
+
+  # データベース
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=washu_db
+      - POSTGRES_USER=washu_user
+      - POSTGRES_PASSWORD=washu_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - washu-network
+
+  # キャッシュ
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"  # ポートを変更して競合を回避
+    volumes:
+      - redis_data:/data
+    networks:
+      - washu-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  washu-network:
+    driver: bridge

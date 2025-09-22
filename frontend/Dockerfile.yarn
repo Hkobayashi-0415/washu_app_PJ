@@ -1,0 +1,23 @@
+# Yarn用Dockerfile for Washu App Frontend
+# - ホットリロード対応
+# - Yarnを使用した依存関係管理
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Yarnをインストール
+RUN npm install -g yarn
+
+# パッケージファイルをコピーして依存関係をインストール
+COPY package.json yarn.lock* ./
+RUN if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else yarn install; fi
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバーを起動（ホットリロード対応）
+EXPOSE 5173
+
+CMD ["yarn", "dev", "--host", "0.0.0.0"]
+

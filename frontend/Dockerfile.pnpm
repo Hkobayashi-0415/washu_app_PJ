@@ -1,0 +1,23 @@
+# pnpm用Dockerfile for Washu App Frontend
+# - ホットリロード対応
+# - pnpmを使用した依存関係管理
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# pnpmをインストール
+RUN npm install -g pnpm
+
+# パッケージファイルをコピーして依存関係をインストール
+COPY package.json pnpm-lock.yaml* ./
+RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm install; fi
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバーを起動（ホットリロード対応）
+EXPOSE 5173
+
+CMD ["pnpm", "dev", "--host", "0.0.0.0"]
+

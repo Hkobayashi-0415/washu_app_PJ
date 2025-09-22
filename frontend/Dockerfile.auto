@@ -1,0 +1,39 @@
+# 自動パッケージマネージャー検出用Dockerfile for Washu App Frontend
+# - ホットリロード対応
+# - npm/yarn/pnpmを自動検出して使用
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# パッケージファイルをコピー
+COPY package.json package-lock.json* yarn.lock* pnpm-lock.yaml* ./
+
+# パッケージマネージャーを自動検出してインストール
+RUN if [ -f pnpm-lock.yaml ]; then \
+        npm install -g pnpm && \
+        pnpm install --frozen-lockfile; \
+    elif [ -f yarn.lock ]; then \
+        npm install -g yarn && \
+        yarn install --frozen-lockfile; \
+    elif [ -f package-lock.json ]; then \
+        npm ci; \
+    else \
+        npm install; \
+    fi
+
+# ソースコードをコピー
+COPY . .
+
+# 開発サーバーを起動（ホットリロード対応）
+EXPOSE 5173
+
+# パッケージマネージャーに応じてコマンドを選択
+CMD if [ -f pnpm-lock.yaml ]; then \
+        pnpm dev --host 0.0.0.0; \
+    elif [ -f yarn.lock ]; then \
+        yarn dev --host 0.0.0.0; \
+    else \
+        npm run dev -- --host 0.0.0.0; \
+    fi
+
