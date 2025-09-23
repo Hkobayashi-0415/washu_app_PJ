@@ -1,7 +1,7 @@
 # Washu App Makefile
 # Docker環境での開発・運用コマンド
 
-.PHONY: help build up down restart logs shell-frontend shell-backend shell-db clean test
+.PHONY: help build up down stop restart logs shell-frontend shell-backend shell-db clean test setup-env smoke pwa-audit
 
 # デフォルトターゲット
 help:
@@ -49,10 +49,13 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d
+	docker compose -f docker-compose.common.yml up -d --build
 
 down:
-	docker-compose down
+	docker compose -f docker-compose.common.yml down
+
+stop:
+	docker compose -f docker-compose.common.yml down
 
 restart:
 	docker-compose restart
@@ -75,7 +78,7 @@ shell-backend:
 	docker-compose -f docker-compose.dev.yml exec backend bash
 
 logs:
-	docker-compose logs -f
+	docker compose -f docker-compose.common.yml logs -f --tail=100
 
 logs-frontend:
 	docker-compose -f docker-compose.dev.yml logs -f frontend
@@ -101,4 +104,17 @@ clean:
 
 clean-volumes:
 	docker-compose down -v
+
+# --- Added by Dev Env migration (washu) ---
+# Create .env from .env.example if missing
+setup-env:
+	@[ -f .env ] || cp .env.example .env && echo ".env created"
+
+# Minimal smoke check (adjust endpoint if needed)
+smoke: ## APIスモーク
+	@bash -c 'sleep 3; curl -fsS http://localhost:18000/health | grep -q "\"ok\"" || (echo "backend not healthy"; exit 1)'
+
+# PWA audit guidance via Lighthouse CI
+pwa-audit:
+	@echo "Run: npm i -g @lhci/cli && lhci autorun --collect.url=http://localhost:5173 --assert.preset=lighthouse:recommended"
 

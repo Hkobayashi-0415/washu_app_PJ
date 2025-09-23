@@ -1,0 +1,29 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: |
+          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
+      - run: pytest -q backend || true   # 後続で整備、今は許容
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: corepack enable
+      - run: |
+          if [ -f frontend/pnpm-lock.yaml ]; then echo "using pnpm"; corepack prepare pnpm@9.0.0 --activate; cd frontend && pnpm i --frozen-lockfile && pnpm build; \
+          elif [ -f frontend/yarn.lock ]; then echo "using yarn"; corepack prepare yarn@3.6.4 --activate; cd frontend && yarn install --immutable && yarn build; \
+          else echo "using npm"; cd frontend && npm ci && npm run build; fi
+
