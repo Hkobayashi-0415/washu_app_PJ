@@ -118,3 +118,13 @@ smoke: ## APIスモーク
 pwa-audit:
 	@echo "Run: npm i -g @lhci/cli && lhci autorun --collect.url=http://localhost:5173 --assert.preset=lighthouse:recommended"
 
+# --- Phase 2: DB & Search API helpers ---
+.PHONY: migrate seed
+
+migrate: ## AlembicでDBマイグレーション適用
+	docker compose -f docker-compose.common.yml exec backend alembic upgrade head
+
+seed: ## シード投入（マイグレ適用後）
+	docker compose -f docker-compose.common.yml exec backend alembic upgrade head
+	docker compose -f docker-compose.common.yml exec backend python -m app.scripts.load_seed --dir /app/seed
+

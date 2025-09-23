@@ -1,0 +1,4 @@
+id,name,brewery_id,region,rice,seimaibuai,nihonshudo,acid,alcohol,description,image_url
+1,獺祭 45,1,山口,山田錦,45,3,1.2,15.0,フルーティで華やかな香り,
+2,黒龍 純米吟醸,2,福井,,,1,,15.5,透明感のある味わい,
+3,獺祭 純米大吟醸 三割九分,1,山口,山田錦,39,2,1.3,16.0,上品な甘みと余韻,
