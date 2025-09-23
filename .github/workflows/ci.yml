@@ -25,5 +25,4 @@ jobs:
       - run: |
           if [ -f frontend/pnpm-lock.yaml ]; then echo "using pnpm"; corepack prepare pnpm@9.0.0 --activate; cd frontend && pnpm i --frozen-lockfile && pnpm build; \
           elif [ -f frontend/yarn.lock ]; then echo "using yarn"; corepack prepare yarn@3.6.4 --activate; cd frontend && yarn install --immutable && yarn build; \
-          else echo "using npm"; cd frontend && npm ci && npm run build; fi
-
+          else echo "using npm"; cd frontend && npm install --no-audit --no-fund && npm run build; fi
