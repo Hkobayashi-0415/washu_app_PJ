@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: washu
+
+  redis:
+    image: redis:7-alpine
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/washu
+      CORS_ORIGINS: http://localhost:5173
+    depends_on: [postgres, redis]
+    command: ["pytest", "-q"]
+
+  # 将来: e2e専用イメージを追加（Playwright/LH）
+
