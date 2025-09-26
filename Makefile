@@ -128,3 +128,12 @@ seed: ## シード投入（マイグレ適用後）
 	docker compose -f docker-compose.common.yml exec backend alembic upgrade head
 	docker compose -f docker-compose.common.yml exec backend python -m app.scripts.load_seed --dir /app/seed
 
+# --- Security helpers ---
+.PHONY: npm-audit scan-workflows
+
+npm-audit: ## frontend の依存確認（代表的なパッケージ）
+	cd frontend && npm ls chalk debug @ctrl/tinycolor color error-ex backslash || true
+
+scan-workflows: ## 怪しいワークフロー/記述の簡易grep
+	@grep -RniE ".github/workflows|postinstall|curl|wget|base64|webhook|requestcatcher|pastebin" . || true
+

@@ -22,7 +22,18 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
       - run: corepack enable
-      - run: |
-          if [ -f frontend/pnpm-lock.yaml ]; then echo "using pnpm"; corepack prepare pnpm@9.0.0 --activate; cd frontend && pnpm i --frozen-lockfile && pnpm build; \
-          elif [ -f frontend/yarn.lock ]; then echo "using yarn"; corepack prepare yarn@3.6.4 --activate; cd frontend && yarn install --immutable && yarn build; \
-          else echo "using npm"; cd frontend && npm install --no-audit --no-fund && npm run build; fi
+      - name: Install and build (scripts disabled by default)
+        env:
+          # Disable lifecycle scripts across package managers
+          npm_config_ignore_scripts: 'true'
+          PNPM_HOME: ~/.pnpm
+          PNPM_IGNORE_SCRIPTS: 'true'
+          YARN_ENABLE_SCRIPTS: 'false'
+        run: |
+          if [ -f frontend/pnpm-lock.yaml ]; then \
+            echo "using pnpm"; corepack prepare pnpm@9.0.0 --activate; cd frontend && pnpm i --frozen-lockfile --ignore-scripts && pnpm build; \
+          elif [ -f frontend/yarn.lock ]; then \
+            echo "using yarn"; corepack prepare yarn@3.6.4 --activate; cd frontend && YARN_ENABLE_SCRIPTS=false yarn install --immutable --mode=skip-builds && yarn build; \
+          else \
+            echo "using npm"; cd frontend && npm install --no-audit --no-fund --ignore-scripts && npm run build; \
+          fi

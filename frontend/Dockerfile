@@ -7,7 +7,8 @@ WORKDIR /app
 
 # Install dependencies (prefer lockfile when present)
 COPY package.json package-lock.json* ./
-RUN sh -c 'if [ -f package-lock.json ]; then npm ci; else npm install; fi'
+# Safer install: disable lifecycle scripts during install
+RUN sh -c 'if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi'
 
 
 FROM node:20-alpine AS builder
@@ -26,4 +27,3 @@ RUN npm run typecheck \
 
 # Final stage kept as builder to allow artifact extraction in CI
 # (dist is located at /app/dist)
-

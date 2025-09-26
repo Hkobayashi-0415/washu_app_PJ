@@ -28,5 +28,22 @@
     "typescript": "^5.6.3",
     "vite": "^5.4.8",
     "vite-plugin-pwa": "^0.20.5"
+  },
+  "overrides": {
+    "debug": "4.3.6",
+    "color": "4.2.3",
+    "@ctrl/tinycolor": ">=4.1.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "debug": "4.3.6",
+      "color": "4.2.3",
+      "@ctrl/tinycolor": ">=4.1.2"
+    }
+  },
+  "resolutions": {
+    "debug": "4.3.6",
+    "color": "4.2.3",
+    "@ctrl/tinycolor": ">=4.1.2"
   }
 }
