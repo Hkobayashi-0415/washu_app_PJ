@@ -35,5 +35,5 @@ jobs:
           elif [ -f frontend/yarn.lock ]; then \
             echo "using yarn"; corepack prepare yarn@3.6.4 --activate; cd frontend && YARN_ENABLE_SCRIPTS=false yarn install --immutable --mode=skip-builds && yarn build; \
           else \
-            echo "using npm"; cd frontend && npm install --no-audit --no-fund --ignore-scripts && npm run build; \
+            echo "No lockfile found. This repo avoids npm. Please commit pnpm-lock.yaml or yarn.lock."; exit 1; \
           fi
