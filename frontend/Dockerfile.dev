@@ -1,20 +1,29 @@
-# 開発用Dockerfile for Washu App Frontend
-# - ホットリロード対応
-# - 開発用依存関係インストール
-
-FROM node:20-alpine
+ARG NODE_IMAGE=node:20-alpine
+FROM ${NODE_IMAGE}
 
 WORKDIR /app
 
-# パッケージファイルをコピーして依存関係をインストール
-COPY package.json package-lock.json* ./
-# Safer install: disable lifecycle scripts during install
-RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
+# Copy manifests (support both pnpm and npm)
+COPY package.json ./
+COPY pnpm-lock.yaml* ./
+COPY package-lock.json* ./
 
-# ソースコードをコピー
+# Safer install: disable lifecycle scripts during install
+RUN set -eux; \
+  corepack enable; \
+  if [ -f pnpm-lock.yaml ]; then \
+    corepack prepare pnpm@9.0.0 --activate; \
+    pnpm i --frozen-lockfile --ignore-scripts --prefer-offline; \
+  elif [ -f package-lock.json ]; then \
+    npm ci --ignore-scripts; \
+  else \
+    npm install --ignore-scripts; \
+  fi
+
+# Copy sources
 COPY . .
 
-# 開発サーバーを起動（ホットリロード対応）
+# Dev server
 EXPOSE 5173
 
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
