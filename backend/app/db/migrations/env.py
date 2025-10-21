@@ -1,15 +1,18 @@
 import os
 import sys
+from pathlib import Path
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 from alembic import context
 
-CURRENT_DIR = os.path.dirname(__file__)
-PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, "../../../"))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+CURRENT_DIR = Path(__file__).resolve().parent
+# Ensure the backend root (…/backend) is on sys.path so `import app.*` works in CI and local
+BACKEND_ROOT = CURRENT_DIR.parents[3]  # migrations -> db -> app -> backend
+backend_root_str = str(BACKEND_ROOT)
+if backend_root_str not in sys.path:
+    sys.path.insert(0, backend_root_str)
 
 from app.db.base import Base  # Base only
 # Import models explicitly so they are registered in metadata

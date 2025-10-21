@@ -49,11 +49,15 @@ jobs:
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
       - name: DB migrate and seed
         working-directory: backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: |
           python -m alembic upgrade head
           python -m app.scripts.load_seed --dir seed
       - name: Run backend tests
         working-directory: backend
+        env:
+          PYTHONPATH: ${{ github.workspace }}/backend
         run: pytest -q
 
   frontend:
