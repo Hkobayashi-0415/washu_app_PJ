@@ -9,7 +9,9 @@ from alembic import context
 
 CURRENT_DIR = Path(__file__).resolve().parent
 # Ensure the backend root (…/backend) is on sys.path so `import app.*` works in CI and local
-BACKEND_ROOT = CURRENT_DIR.parents[3]  # migrations -> db -> app -> backend
+# parents indexing: 0=migrations, 1=db, 2=app, 3=backend (from right to left)
+# To reach …/backend from …/backend/app/db/migrations, use parents[2].
+BACKEND_ROOT = CURRENT_DIR.parents[2]
 backend_root_str = str(BACKEND_ROOT)
 if backend_root_str not in sys.path:
     sys.path.insert(0, backend_root_str)
