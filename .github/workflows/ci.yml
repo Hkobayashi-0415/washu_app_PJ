@@ -3,6 +3,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -10,6 +11,9 @@ permissions:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/washu
+      PYTHONPATH: ${{ github.workspace }}/backend
     services:
       postgres:
         image: postgres:16-alpine
@@ -24,8 +28,6 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
-    env:
-      DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/washu
     steps:
       - name: Harden runner (egress audit)
         uses: step-security/harden-runner@v2
@@ -43,14 +45,13 @@ jobs:
           if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
           if [ -f backend/requirements-dev.txt ]; then pip install -r backend/requirements-dev.txt; fi
       - name: DB migrate and seed
+        working-directory: backend
         run: |
-          cd backend
           alembic upgrade head
           python -m app.scripts.load_seed --dir seed
       - name: Run backend tests
-        run: |
-          cd backend
-          pytest -q
+        working-directory: backend
+        run: pytest -q
 
   frontend:
     runs-on: ubuntu-latest
