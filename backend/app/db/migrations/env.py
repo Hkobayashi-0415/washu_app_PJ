@@ -8,19 +8,15 @@ from sqlalchemy import pool
 from alembic import context
 
 CURRENT_DIR = Path(__file__).resolve().parent
-# Ensure our package paths are prioritized so `import app.*` resolves to this repo
-# From …/backend/app/db/migrations -> parents[2] == …/backend/app, parents[3] == …/backend
-APP_ROOT = CURRENT_DIR.parents[2]
-BACKEND_ROOT = CURRENT_DIR.parents[3]
+# Ensure backend (parent of `app`) is first on sys.path so `import app.*` resolves locally.
+# Structure: backend/app/db/migrations → parents[0]=backend/app, parents[1]=backend, parents[2]=repo root.
+BACKEND_ROOT = CURRENT_DIR.parents[1]
+PROJECT_ROOT = CURRENT_DIR.parents[2]
 
-# Insert app root first, then backend root, to prioritize local package
-app_root_str = str(APP_ROOT)
-if app_root_str not in sys.path:
-    sys.path.insert(0, app_root_str)
-
-backend_root_str = str(BACKEND_ROOT)
-if backend_root_str not in sys.path:
-    sys.path.insert(0, backend_root_str)
+for path in (BACKEND_ROOT, PROJECT_ROOT):
+    path_str = str(path)
+    if path_str not in sys.path:
+        sys.path.insert(0, path_str)
 
 from app.db.base import Base  # Base only
 # Import models explicitly so they are registered in metadata
