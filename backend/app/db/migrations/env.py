@@ -9,9 +9,9 @@ from alembic import context
 
 CURRENT_DIR = Path(__file__).resolve().parent
 # Ensure our package paths are prioritized so `import app.*` resolves to this repo
-# From …/backend/app/db/migrations -> parents[2] == …/backend
-BACKEND_ROOT = CURRENT_DIR.parents[2]
-APP_ROOT = BACKEND_ROOT / "app"
+# From …/backend/app/db/migrations -> parents[2] == …/backend/app, parents[3] == …/backend
+APP_ROOT = CURRENT_DIR.parents[2]
+BACKEND_ROOT = CURRENT_DIR.parents[3]
 
 # Insert app root first, then backend root, to prioritize local package
 app_root_str = str(APP_ROOT)
