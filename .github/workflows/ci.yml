@@ -44,10 +44,13 @@ jobs:
       - run: |
           if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
           if [ -f backend/requirements-dev.txt ]; then pip install -r backend/requirements-dev.txt; fi
+      - name: Export PYTHONPATH (backend dir)
+        working-directory: backend
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
       - name: DB migrate and seed
         working-directory: backend
         run: |
-          alembic upgrade head
+          python -m alembic upgrade head
           python -m app.scripts.load_seed --dir seed
       - name: Run backend tests
         working-directory: backend
