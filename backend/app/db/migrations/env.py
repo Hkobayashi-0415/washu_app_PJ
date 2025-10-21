@@ -8,10 +8,16 @@ from sqlalchemy import pool
 from alembic import context
 
 CURRENT_DIR = Path(__file__).resolve().parent
-# Ensure the backend root (…/backend) is on sys.path so `import app.*` works in CI and local
-# parents indexing: 0=migrations, 1=db, 2=app, 3=backend (from right to left)
-# To reach …/backend from …/backend/app/db/migrations, use parents[2].
+# Ensure our package paths are prioritized so `import app.*` resolves to this repo
+# From …/backend/app/db/migrations -> parents[2] == …/backend
 BACKEND_ROOT = CURRENT_DIR.parents[2]
+APP_ROOT = BACKEND_ROOT / "app"
+
+# Insert app root first, then backend root, to prioritize local package
+app_root_str = str(APP_ROOT)
+if app_root_str not in sys.path:
+    sys.path.insert(0, app_root_str)
+
 backend_root_str = str(BACKEND_ROOT)
 if backend_root_str not in sys.path:
     sys.path.insert(0, backend_root_str)

@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/washu
-      PYTHONPATH: ${{ github.workspace }}/backend
+      PYTHONPATH: "${{ github.workspace }}/backend:${{ github.workspace }}/backend/app"
     services:
       postgres:
         image: postgres:16-alpine
@@ -46,18 +46,18 @@ jobs:
           if [ -f backend/requirements-dev.txt ]; then pip install -r backend/requirements-dev.txt; fi
       - name: Export PYTHONPATH (backend dir)
         working-directory: backend
-        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=$PWD:$PWD/app" >> $GITHUB_ENV
       - name: DB migrate and seed
         working-directory: backend
         env:
-          PYTHONPATH: ${{ github.workspace }}/backend
+          PYTHONPATH: "${{ github.workspace }}/backend:${{ github.workspace }}/backend/app"
         run: |
           python -m alembic upgrade head
           python -m app.scripts.load_seed --dir seed
       - name: Run backend tests
         working-directory: backend
         env:
-          PYTHONPATH: ${{ github.workspace }}/backend
+          PYTHONPATH: "${{ github.workspace }}/backend:${{ github.workspace }}/backend/app"
         run: pytest -q
 
   frontend:
