@@ -13,7 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/washu
-      PYTHONPATH: "${{ github.workspace }}/backend:${{ github.workspace }}/backend/app"
     services:
       postgres:
         image: postgres:16-alpine
@@ -41,24 +40,18 @@ jobs:
           cache-dependency-path: |
             backend/requirements.txt
             backend/requirements-dev.txt
-      - run: |
-          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
-          if [ -f backend/requirements-dev.txt ]; then pip install -r backend/requirements-dev.txt; fi
-      - name: Export PYTHONPATH (backend dir)
-        working-directory: backend
-        run: echo "PYTHONPATH=$PWD:$PWD/app" >> $GITHUB_ENV
-      - name: DB migrate and seed
-        working-directory: backend
-        env:
-          PYTHONPATH: "${{ github.workspace }}/backend:${{ github.workspace }}/backend/app"
+      - name: Install backend package
         run: |
-          python -m alembic upgrade head
-          python -m app.scripts.load_seed --dir seed
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install -r backend/requirements-dev.txt
+          pip install -e backend
+      - name: Run Alembic migrations
+        run: alembic -c backend/alembic.ini upgrade head
+      - name: Seed database
+        run: python -m app.scripts.load_seed --dir backend/seed
       - name: Run backend tests
-        working-directory: backend
-        env:
-          PYTHONPATH: "${{ github.workspace }}/backend:${{ github.workspace }}/backend/app"
-        run: pytest -q
+        run: pytest -q backend/tests
 
   frontend:
     runs-on: ubuntu-latest
