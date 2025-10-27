@@ -55,6 +55,9 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - name: Harden runner (egress audit)
         uses: step-security/harden-runner@v2
@@ -63,44 +66,23 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-      - name: Set up pnpm
+          node-version: 20
+      - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
           version: 9
           run_install: false
-          cache: true
-          cache-dependency-path: frontend/pnpm-lock.yaml
-      - run: corepack enable
-      - name: Restore Yarn cache
-        if: hashFiles('frontend/yarn.lock') != ''
+      - name: Determine pnpm store path
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore pnpm cache
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/yarn
-            ~/.yarn/berry/cache
-          key: ${{ runner.os }}-yarn-${{ hashFiles('frontend/yarn.lock') }}
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Install and build (scripts disabled by default)
-        working-directory: frontend
-        env:
-          # Disable lifecycle scripts across package managers
-          npm_config_ignore_scripts: 'true'
-          PNPM_HOME: ~/.pnpm
-          PNPM_IGNORE_SCRIPTS: 'true'
-          YARN_ENABLE_SCRIPTS: 'false'
-        run: |
-          if [ -f pnpm-lock.yaml ]; then
-            echo "using pnpm"
-            pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
-            pnpm build
-          elif [ -f yarn.lock ]; then
-            echo "using yarn"
-            corepack prepare yarn@3.6.4 --activate
-            YARN_ENABLE_SCRIPTS=false yarn install --immutable --mode=skip-builds --cache-folder ~/.cache/yarn
-            yarn build
-          else
-            echo "No lockfile found. This repo avoids npm. Please commit pnpm-lock.yaml or yarn.lock."
-            exit 1
-          fi
+            ${{ runner.os }}-pnpm-
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build frontend
+        run: pnpm run build
