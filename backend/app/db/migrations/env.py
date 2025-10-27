@@ -8,12 +8,12 @@ from sqlalchemy import pool
 from alembic import context
 
 CURRENT_DIR = Path(__file__).resolve().parent
-# Ensure backend (parent of `app`) is first on sys.path so `import app.*` resolves locally.
-# Structure: backend/app/db/migrations -> parents[0]=backend/app/db, parents[1]=backend/app, parents[2]=backend, parents[3]=repository root.
+# Ensure backend and app modules are importable (structure: backend/app/db/migrations)
+APP_ROOT = CURRENT_DIR.parents[1]
 BACKEND_ROOT = CURRENT_DIR.parents[2]
 PROJECT_ROOT = CURRENT_DIR.parents[3]
 
-for path in (BACKEND_ROOT, PROJECT_ROOT):
+for path in (APP_ROOT, BACKEND_ROOT, PROJECT_ROOT):
     path_str = str(path)
     if path_str not in sys.path:
         sys.path.insert(0, path_str)
@@ -68,6 +68,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
-
-
