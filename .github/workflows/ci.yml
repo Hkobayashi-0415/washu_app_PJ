@@ -3,26 +3,86 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@localhost:5432/washu
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: washu
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d washu"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
     steps:
+      - name: Harden runner (egress audit)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - run: |
-          if [ -f backend/requirements.txt ]; then pip install -r backend/requirements.txt; fi
-      - run: pytest -q backend || true   # 後続で整備、今は許容
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - name: Install backend package
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install -r backend/requirements-dev.txt
+          pip install -e backend
+      - name: Run Alembic migrations
+        run: alembic -c backend/alembic.ini upgrade head
+      - name: Seed database
+        run: python -m app.scripts.load_seed --dir backend/seed
+      - name: Run backend tests
+        run: pytest -q backend/tests
 
   frontend:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
+      - name: Harden runner (egress audit)
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: corepack enable
-      - run: |
-          if [ -f frontend/pnpm-lock.yaml ]; then echo "using pnpm"; corepack prepare pnpm@9.0.0 --activate; cd frontend && pnpm i --frozen-lockfile && pnpm build; \
-          elif [ -f frontend/yarn.lock ]; then echo "using yarn"; corepack prepare yarn@3.6.4 --activate; cd frontend && yarn install --immutable && yarn build; \
-          else echo "using npm"; cd frontend && npm install --no-audit --no-fund && npm run build; fi
+        with:
+          node-version: 20
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+      - name: Determine pnpm store path
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build frontend
+        run: pnpm run build

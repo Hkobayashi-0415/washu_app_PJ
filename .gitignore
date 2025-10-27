@@ -163,7 +163,10 @@ dmypy.json
 *.h5
 *.hdf5
 models/
+!backend/app/models/
+!backend/app/models/**
 checkpoints/
 
 # Project specific
 ai-config/
+
