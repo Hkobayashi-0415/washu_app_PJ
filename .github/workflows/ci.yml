@@ -73,6 +73,11 @@ jobs:
           node-version: '20'
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
       - run: corepack enable
       - name: Restore Yarn cache
         if: hashFiles('frontend/yarn.lock') != ''
@@ -85,6 +90,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-yarn-
       - name: Install and build (scripts disabled by default)
+        working-directory: frontend
         env:
           # Disable lifecycle scripts across package managers
           npm_config_ignore_scripts: 'true'
@@ -92,10 +98,16 @@ jobs:
           PNPM_IGNORE_SCRIPTS: 'true'
           YARN_ENABLE_SCRIPTS: 'false'
         run: |
-          if [ -f frontend/pnpm-lock.yaml ]; then \
-            echo "using pnpm"; corepack prepare pnpm@9.0.0 --activate; cd frontend && pnpm i --frozen-lockfile --ignore-scripts --prefer-offline && pnpm build; \
-          elif [ -f frontend/yarn.lock ]; then \
-            echo "using yarn"; corepack prepare yarn@3.6.4 --activate; cd frontend && YARN_ENABLE_SCRIPTS=false yarn install --immutable --mode=skip-builds --cache-folder ~/.cache/yarn && yarn build; \
-          else \
-            echo "No lockfile found. This repo avoids npm. Please commit pnpm-lock.yaml or yarn.lock."; exit 1; \
+          if [ -f pnpm-lock.yaml ]; then
+            echo "using pnpm"
+            pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+            pnpm build
+          elif [ -f yarn.lock ]; then
+            echo "using yarn"
+            corepack prepare yarn@3.6.4 --activate
+            YARN_ENABLE_SCRIPTS=false yarn install --immutable --mode=skip-builds --cache-folder ~/.cache/yarn
+            yarn build
+          else
+            echo "No lockfile found. This repo avoids npm. Please commit pnpm-lock.yaml or yarn.lock."
+            exit 1
           fi

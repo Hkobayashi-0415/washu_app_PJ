@@ -9,7 +9,7 @@ from alembic import context
 
 CURRENT_DIR = Path(__file__).resolve().parent
 # Ensure backend (parent of `app`) is first on sys.path so `import app.*` resolves locally.
-# Structure: backend/app/db/migrations → parents[0]=backend/app, parents[1]=backend, parents[2]=repo root.
+# Structure: backend/app/db/migrations -> parents[0]=backend/app/db, parents[1]=backend/app, parents[2]=backend, parents[3]=repository root.
 BACKEND_ROOT = CURRENT_DIR.parents[2]
 PROJECT_ROOT = CURRENT_DIR.parents[3]
 
@@ -68,4 +68,6 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+
+
 
