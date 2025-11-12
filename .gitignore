@@ -119,6 +119,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.venv/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -156,6 +157,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+*.egg-info/
 
 # AI/ML specific
 *.pkl
@@ -169,4 +171,5 @@ checkpoints/
 
 # Project specific
 ai-config/
+backend/app/models/__pycache__/
 
