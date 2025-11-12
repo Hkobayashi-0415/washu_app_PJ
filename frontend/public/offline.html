@@ -34,25 +34,61 @@
         border: 1px solid rgba(148, 163, 184, 0.3);
         max-width: 32rem;
       }
+      .actions {
+        margin-top: 1.75rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+      }
       button {
-        margin-top: 1.5rem;
-        padding: 0.85rem 2.25rem;
+        padding: 0.85rem 1.75rem;
         border-radius: 9999px;
         border: none;
         font-size: 1rem;
         font-weight: 600;
+        cursor: pointer;
+        min-width: 9rem;
+      }
+      button.primary {
         color: #0f172a;
         background: #facc15;
-        cursor: pointer;
+      }
+      button.secondary {
+        color: #f8fafc;
+        background: rgba(148, 163, 184, 0.2);
+        border: 1px solid rgba(148, 163, 184, 0.35);
       }
     </style>
   </head>
   <body>
     <div class="card">
       <h1>オフラインです</h1>
-      <p>ネットワークへ再接続すると、Washu App が自動的に最新状態へ復旧します。</p>
-      <p>接続できる環境に移動したら、下のボタンで再読み込みしてください。</p>
-      <button type="button" onclick="window.location.reload()">再読み込み</button>
+      <p>ネットワークへ再接続すると Washu App が自動的に最新状態へ復旧します。</p>
+      <p>接続を確認できたら、下のボタンかオンライン復帰で自動的に元の画面へ戻ります。</p>
+      <div class="actions">
+        <button type="button" class="primary" id="retry-button">再読み込み</button>
+        <button type="button" class="secondary" id="home-button">ホームに戻る</button>
+      </div>
     </div>
+    <script>
+      const reloadToApp = () => window.location.replace('/search');
+      document.getElementById('retry-button').addEventListener('click', () => window.location.reload());
+      document.getElementById('home-button').addEventListener('click', reloadToApp);
+
+      const pingWhenOnline = () => {
+        if (!navigator.onLine) {
+          return;
+        }
+        fetch('/health', { cache: 'no-store' })
+          .then(() => reloadToApp())
+          .catch(() => {
+            // keep waiting until a healthy response is received
+          });
+      };
+
+      window.addEventListener('online', pingWhenOnline);
+      setTimeout(pingWhenOnline, 2000);
+    </script>
   </body>
 </html>

@@ -13,7 +13,7 @@ washu_app_PJ/
 │   ├── vite.config.ts     # Vite & PWA 設定
 │   └── package.json       # 依存関係と npm scripts
 └── .github/workflows/     # フロントエンド CI（lint/typecheck/build）
-```
+````
 
 ## 必要環境
 
@@ -25,20 +25,41 @@ washu_app_PJ/
 
 ```bash
 cd frontend
-npm install
-```
+pnpm install
+````
 
 > ネットワークポリシーで npm registry へアクセスできない場合は、利用可能なミラーを `npm config set registry <url>` で指定してください。
+
+
+## 環境変数
+
+`frontend/.env` または `frontend/.env.local` に以下を設定してください。
+
+```
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+バックエンドを別ポートで起動する場合は値を調整します。CI や Docker Compose では環境に応じて上書きしてください。
 
 ## 開発コマンド
 
 | コマンド | 説明 |
 | --- | --- |
-| `npm run dev` | 開発サーバーを起動（`http://localhost:5173`）。Service Worker はデバッグモードで更新されます。 |
-| `npm run build` | 本番ビルドを `dist/` に出力。 |
-| `npm run preview` | 本番ビルドをローカルで配信し動作確認。 |
-| `npm run lint` | ESLint + Prettier ルールで静的解析。 |
-| `npm run typecheck` | TypeScript 型チェック。 |
+| `pnpm run dev` | 開発サーバーを起動（`http://localhost:5173`）。Service Worker はデバッグモードで更新されます。 |
+| `pnpm run build` | 本番ビルドを `dist/` に出力。 |
+| `pnpm run preview` | 本番ビルドをローカルで配信し動作確認。 |
+| `pnpm run lint` | ESLint + Prettier ルールで静的解析。 |
+| `pnpm run typecheck` | TypeScript 型チェック。 |
+
+
+## フェーズ3: 検索ページの使い方
+
+- `/search` ページでキーワードと地域を指定すると、FastAPI の `/api/v1/sake/search` に接続した結果一覧が表示されます。
+- `@tanstack/react-query` と `zod` を利用してレスポンスの検証と再試行制御を行います。API 仕様を変更する際は `frontend/src/lib/api.ts` を更新してください。
+- オフライン時は `navigator.onLine` と online/offline イベントで検知し、検索ボタンを無効化して案内バナーを表示します。復帰後はキャッシュを基に自動で再取得します。
+- 「さらに表示」ボタンでページングし、`page / per_page / total` の値から次ページの有無を判定しています。
+- 0件時の空状態、通信エラー時のリトライ導線、ネットワークトーストの表示を確認してください。甘辛スライダーは UI のみで、今回のリクエストには送信しません。
+- バックエンド（FastAPI）が起動していない場合は接続不能として検知し、「APIサーバーに接続できません。バックエンドが起動しているか確認してください。」と案内されます。`uvicorn app.main:app --reload --app-dir backend --host 0.0.0.0 --port 8000` などで API を立ち上げてから検索してください。
 
 ## PWA 構成のポイント
 
@@ -69,14 +90,14 @@ npm install
 
 ## オフライン動作の確認手順
 
-1. `npm run build` と `npm run preview` で本番プレビューを起動。
+1. `pnpm run build` と `pnpm run preview` で本番プレビューを起動。
 2. ブラウザの DevTools で「Offline」を有効化。
 3. ページをリロードし、`offline.html` のメッセージが表示されることを確認。
 4. オンラインに戻して再読み込みすると通常画面が復帰します。
 
 ## QA / Lighthouse
 
-- 本番ビルド (`npm run build && npm run preview`) を対象に Lighthouse (モバイル) を実行してください。
+- 本番ビルド (`pnpm run build && pnpm run preview`) を対象に Lighthouse (モバイル) を実行してください。
 - PWA カテゴリの「Installable」が Pass になる構成です。
 
 ## CI について
@@ -100,7 +121,7 @@ docker build -t washu-frontend:build ./frontend
 $id = docker create washu-frontend:build; `
 docker cp $id:/app/dist ./frontend/dist; `
 docker rm $id
-```
+````
 
 ## ライセンス
 
