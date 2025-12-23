@@ -83,6 +83,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --force
+      - name: Verify frontend deps
+        run: pnpm list --depth 0 localforage | grep localforage
       - name: Build frontend
         run: pnpm run build
