@@ -61,6 +61,25 @@ VITE_API_BASE_URL=http://localhost:8000
 - 0件時の空状態、通信エラー時のリトライ導線、ネットワークトーストの表示を確認してください。甘辛スライダーは UI のみで、今回のリクエストには送信しません。
 - バックエンド（FastAPI）が起動していない場合は接続不能として検知し、「APIサーバーに接続できません。バックエンドが起動しているか確認してください。」と案内されます。`uvicorn app.main:app --reload --app-dir backend --host 0.0.0.0 --port 8000` などで API を立ち上げてから検索してください。
 
+## フェーズ4: 詳細ページと最近見た
+
+- `/sake/:id` で銘柄の詳細を表示します。画像・蔵元・地域・味わいタグ・米／精米歩合／日本酒度／酸度／度数・説明を段階的に描画し、スケルトン→本体→エラーの 3 状態を切り替えています。Hero 画像は `loading="eager"` と `aspect-ratio` により LCP を抑制しています。
+- 詳細を閲覧すると IndexedDB（localForage）に `recent_sake` レコードが保存され、`/recent` ページで最大 50 件の履歴を新しい順に確認できます。ID ごとに上書き（削除→再挿入）し、オフラインでも読み出し可能です。
+- 検索フォームの地域プルダウンは起動時に React Query の `['meta','regions']` を prefetch したキャッシュを参照します。取得済みデータはオフラインでもそのまま使え、ローディング中は「地域データを更新しています…」と案内します。
+- `/search` のカードから `/sake/:id` へ遷移し、ヘッダーや `/sake/:id` 内のボタンから `/recent` に移動できます。ホーム画面に追加した PWA でも IndexedDB から即座に履歴を描画するため、ネットワークが切れていても閲覧できます。
+
+## フェーズ5: お気に入り（IndexedDB）
+
+- 一覧と詳細ページの★トグルでお気に入り登録を行い、即時反映した上で localForage に非同期で永続化します。
+- `/favorites` ページで最新順のお気に入りを閲覧・削除できます。オフラインでも参照と削除が可能です。
+- 同じ銘柄は 1 件だけ保持し、追加時は既存レコードを置き換えて順序を更新します。
+
+## CORS / LAN access
+
+- When opening the frontend from another device (e.g. http://192.168.2.200:5173), set CORS_ALLOWED_ORIGINS on the backend to include that origin.
+- Example: CORS_ALLOWED_ORIGINS=http://192.168.2.200:5173,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173
+- Default backend port is 18000 (host). Update frontend/.env so VITE_API_BASE_URL matches the actual API endpoint, then restart the frontend.
+
 ## PWA 構成のポイント
 
 - `vite-plugin-pwa` により manifest / Service Worker / オフラインキャッシュを自動生成。

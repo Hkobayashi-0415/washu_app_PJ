@@ -5,7 +5,7 @@ import {
   useQueryClient,
   type InfiniteData,
 } from '@tanstack/react-query';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 
 import {
   getRegions,
@@ -13,6 +13,7 @@ import {
   type SakeSearchResponse,
   type SakeSummary,
 } from '../lib/api.ts';
+import { useFavorites } from '../hooks/useFavorites.ts';
 import { useNetworkStatus } from '../hooks/useNetworkStatus.ts';
 
 const PER_PAGE = 20;
@@ -105,11 +106,14 @@ const SearchPage = () => {
     queryClient.invalidateQueries({ queryKey, exact: true, refetchType: 'active' });
   }, [isOnline, queryClient, queryKey]);
 
+  const prefetchedRegions = queryClient.getQueryData<string[]>(['meta', 'regions']);
+
   const regionQuery = useQuery({
     queryKey: ['meta', 'regions'],
     queryFn: ({ signal }) => getRegions({ signal }),
     staleTime: 1000 * 60 * 60 * 12,
-    enabled: isOnline,
+    enabled: isOnline || !!prefetchedRegions,
+    initialData: prefetchedRegions,
   });
 
   const regionOptions =
@@ -118,6 +122,7 @@ const SearchPage = () => {
       : REGION_FALLBACK;
 
   const [toast, setToast] = useState<ToastState>(null);
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     if (lastChangedAt === null) {
@@ -128,8 +133,23 @@ const SearchPage = () => {
     return () => window.clearTimeout(timer);
   }, [isOnline, lastChangedAt]);
 
-  const items =
-    data?.pages.flatMap((page) => page.items) ?? [];
+  const items = useMemo(() => {
+    if (!data?.pages) {
+      return [];
+    }
+    const seen = new Set<number>();
+    const merged: SakeSummary[] = [];
+    for (const page of data.pages) {
+      for (const item of page.items) {
+        if (seen.has(item.id)) {
+          continue;
+        }
+        seen.add(item.id);
+        merged.push(item);
+      }
+    }
+    return merged;
+  }, [data]);
   const totalResults = data?.pages?.[0]?.total ?? 0;
   const isInitialLoading = isPending;
   const showEmptyState = !isInitialLoading && !error && items.length === 0;
@@ -162,6 +182,14 @@ const SearchPage = () => {
             <p className="page-title__lead">
               フェーズ3では、検索フォームから銘柄一覧を取得し、オンラインでもオフラインでも状況がわかるモバイル最適なUIを目指します。
             </p>
+          </div>
+          <div className="page-header__actions">
+            <Link to="/recent" className="recent-link">
+              最近見た
+            </Link>
+            <Link to="/favorites" className="favorites-link">
+              お気に入り
+            </Link>
           </div>
         </header>
 
@@ -203,6 +231,7 @@ const SearchPage = () => {
                     region: event.target.value,
                   }))
                 }
+                disabled={!isOnline && !(regionQuery.data && regionQuery.data.length > 0)}
               >
                 <option value="">すべて</option>
                 {regionOptions.map((region) => (
@@ -211,6 +240,11 @@ const SearchPage = () => {
                   </option>
                 ))}
               </select>
+              {regionQuery.isFetching && (
+                <p className="search-form__note" aria-live="polite">
+                  地域データを更新しています…
+                </p>
+              )}
               {regionQuery.isError && (
                 <p className="search-form__helper">
                   地域リストの取得に失敗したため仮のリストを表示しています。
@@ -308,7 +342,20 @@ const SearchPage = () => {
             <>
               <div className="card-grid">
                 {items.map((item) => (
-                  <SakeCard key={item.id} sake={item} />
+                  <SakeCard
+                    key={item.id}
+                    sake={item}
+                    isFavorite={isFavorite(item.id)}
+                    onToggle={() =>
+                      toggleFavorite({
+                        id: item.id,
+                        name: item.name,
+                        brewery: item.brewery,
+                        region: item.region,
+                        imageUrl: item.imageUrl,
+                      })
+                    }
+                  />
                 ))}
               </div>
 
@@ -348,44 +395,58 @@ const SearchPage = () => {
 
 type SakeCardProps = {
   sake: SakeSummary;
+  isFavorite: boolean;
+  onToggle: () => void;
 };
 
-const SakeCard = ({ sake }: SakeCardProps) => {
+const SakeCard = ({ sake, isFavorite, onToggle }: SakeCardProps) => {
   const tags = sake.tags.slice(0, 2);
   return (
-    <article className="sake-card">
-      <div className="sake-card__media">
-        {sake.imageUrl ? (
-          <img
-            src={sake.imageUrl}
-            alt={`${sake.name}のラベル`}
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div className="sake-card__placeholder" aria-hidden="true">
-            No Image
-          </div>
-        )}
-        <span className="sake-card__badge" aria-hidden="true">
-          ★
-        </span>
-      </div>
-      <div className="sake-card__body">
-        <h3>{sake.name}</h3>
-        <p className="sake-card__brewery">{sake.brewery}</p>
-        <p className="sake-card__region">{sake.region}</p>
-        {tags.length > 0 && (
-          <div className="sake-card__tags">
-            {tags.map((tag) => (
-              <span key={tag} className="sake-card__tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    </article>
+    <div className="sake-card">
+      <Link className="sake-card__link" to={`/sake/${sake.id}`}>
+        <div className="sake-card__media">
+          {sake.imageUrl ? (
+            <img
+              src={sake.imageUrl}
+              alt={`${sake.name}のラベル`}
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            <div className="sake-card__placeholder" aria-hidden="true">
+              No Image
+            </div>
+          )}
+        </div>
+        <div className="sake-card__body">
+          <h3>{sake.name}</h3>
+          <p className="sake-card__brewery">{sake.brewery}</p>
+          <p className="sake-card__region">{sake.region}</p>
+          {tags.length > 0 && (
+            <div className="sake-card__tags">
+              {tags.map((tag) => (
+                <span key={tag} className="sake-card__tag">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </Link>
+      <button
+        type="button"
+        className={`favorite-toggle${isFavorite ? ' is-active' : ''}`}
+        aria-pressed={isFavorite}
+        aria-label={
+          isFavorite
+            ? `${sake.name}をお気に入りから削除`
+            : `${sake.name}をお気に入りに追加`
+        }
+        onClick={onToggle}
+      >
+        ★
+      </button>
+    </div>
   );
 };
 
