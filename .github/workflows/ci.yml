@@ -71,8 +71,7 @@ jobs:
           run_install: false
       - name: Determine pnpm store path
         id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
-        working-directory: frontend
+        run: echo "STORE_PATH=$(pnpm -C frontend store path --silent)" >> "$GITHUB_OUTPUT"
       - name: Restore pnpm cache
         uses: actions/cache@v4
         with:
@@ -81,14 +80,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
       - name: Configure pnpm node linker
-        run: pnpm config set node-linker hoisted --location project
-        working-directory: frontend
+        run: pnpm -C frontend config set node-linker hoisted --location project
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile --force
-        working-directory: frontend
+        run: pnpm -C frontend install --frozen-lockfile --force
+      - name: Inspect installed deps
+        run: |
+          ls -la frontend/node_modules
+          ls -la frontend/node_modules/localforage
+          pnpm -C frontend list --depth 0
       - name: Verify frontend deps
-        run: pnpm exec node -e "require.resolve('localforage')"
-        working-directory: frontend
+        run: pnpm -C frontend exec node -e "require.resolve('localforage')"
       - name: Build frontend
-        run: pnpm run build
-        working-directory: frontend
+        run: pnpm -C frontend run build
