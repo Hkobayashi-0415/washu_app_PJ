@@ -55,9 +55,6 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
     steps:
       - name: Harden runner (egress audit)
         uses: step-security/harden-runner@v2
@@ -74,7 +71,7 @@ jobs:
           run_install: false
       - name: Determine pnpm store path
         id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+        run: echo "STORE_PATH=$(pnpm -C frontend store path --silent)" >> "$GITHUB_OUTPUT"
       - name: Restore pnpm cache
         uses: actions/cache@v4
         with:
@@ -82,7 +79,16 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('frontend/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-
+      - name: Configure pnpm node linker
+        run: pnpm -C frontend config set node-linker hoisted --location project
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm -C frontend install --frozen-lockfile --force
+      - name: Inspect installed deps
+        run: |
+          ls -la frontend/node_modules
+          ls -la frontend/node_modules/localforage
+          pnpm -C frontend list --depth 0
+      - name: Verify frontend deps
+        run: pnpm -C frontend exec node -e "require.resolve('localforage')"
       - name: Build frontend
-        run: pnpm run build
+        run: pnpm -C frontend run build

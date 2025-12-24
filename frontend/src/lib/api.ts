@@ -18,8 +18,18 @@ const rawSakeSummarySchema = z.object({
   name: z.string(),
   brewery: z.string(),
   region: z.string(),
-  tags: z.array(z.string()),
+  tags: z.array(z.string()).nullish(),
   image_url: z.string().trim().min(1).optional().nullable(),
+});
+
+const rawSakeDetailSchema = rawSakeSummarySchema.extend({
+  rice: z.string().optional().nullable(),
+  seimaibuai: z.number().optional().nullable(),
+  nihonshudo: z.number().optional().nullable(),
+  acid: z.number().optional().nullable(),
+  alcohol: z.number().optional().nullable(),
+  taste_tags: z.array(z.string()).optional().nullable(),
+  description: z.string().optional().nullable(),
 });
 
 const rawSearchResponseSchema = z.object({
@@ -49,6 +59,21 @@ export type SakeSearchResponse = {
   total: number;
 };
 
+export type SakeDetail = {
+  id: number;
+  name: string;
+  brewery: string;
+  region: string;
+  rice?: string;
+  seimaibuai?: number;
+  nihonshudo?: number;
+  acid?: number;
+  alcohol?: number;
+  tasteTags: string[];
+  description?: string;
+  imageUrl?: string;
+};
+
 export type SakeSearchParams = {
   q?: string;
   region?: string;
@@ -65,8 +90,22 @@ const mapSakeSummary = (raw: z.infer<typeof rawSakeSummarySchema>): SakeSummary 
   name: raw.name,
   brewery: raw.brewery,
   region: raw.region,
-  tags: raw.tags,
+  tags: raw.tags ?? [],
   imageUrl: raw.image_url ?? undefined,
+});
+
+const toOptionalValue = <T>(value: T | null | undefined): T | undefined =>
+  value === null || value === undefined ? undefined : value;
+
+const mapSakeDetail = (raw: z.infer<typeof rawSakeDetailSchema>): SakeDetail => ({
+  ...mapSakeSummary(raw),
+  rice: toOptionalValue(raw.rice),
+  seimaibuai: toOptionalValue(raw.seimaibuai),
+  nihonshudo: toOptionalValue(raw.nihonshudo),
+  acid: toOptionalValue(raw.acid),
+  alcohol: toOptionalValue(raw.alcohol),
+  tasteTags: raw.taste_tags ?? [],
+  description: toOptionalValue(raw.description),
 });
 
 const buildUrl = (
@@ -175,6 +214,20 @@ export const getSakeSearch = async (
     perPage: parsed.per_page,
     total: parsed.total,
   };
+};
+
+export const getSakeDetail = async (
+  id: number,
+  options?: RequestOptions,
+): Promise<SakeDetail> => {
+  const payload = await requestJson<unknown>(
+    `/api/v1/sake/${id}`,
+    {},
+    '銘柄詳細の取得に失敗しました。',
+    options,
+  );
+  const parsed = rawSakeDetailSchema.parse(payload);
+  return mapSakeDetail(parsed);
 };
 
 export const getRegions = async (options?: RequestOptions): Promise<string[]> => {
