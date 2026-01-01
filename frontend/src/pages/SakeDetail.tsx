@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router-dom';
 
 import { getSakeDetail, type SakeDetail } from '../lib/api.ts';
+import { track } from '../lib/analytics.ts';
 import { addRecent } from '../lib/db.ts';
 import { useFavorites } from '../hooks/useFavorites.ts';
 import { useNetworkStatus } from '../hooks/useNetworkStatus.ts';
@@ -87,6 +88,28 @@ const SakeDetailPage = () => {
       }
     : null;
   const isFavorited = data ? isFavorite(data.id) : false;
+
+  useEffect(() => {
+    track('screen_view', { screen: 'detail', id: sakeId });
+  }, [sakeId]);
+
+  useEffect(() => {
+    if (data) {
+      track('detail_view', { id: data.id, name: data.name });
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      track('error', { screen: 'detail', message: error.message });
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (!isOnline) {
+      track('offline_banner_show', { screen: 'detail' });
+    }
+  }, [isOnline]);
 
   if (!isValidId) {
     return (

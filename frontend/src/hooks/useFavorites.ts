@@ -7,6 +7,7 @@ import {
   type FavoriteSakeDraft,
   type FavoriteSakeRecord,
 } from '../lib/db.ts';
+import { track } from '../lib/analytics.ts';
 
 type UseFavoritesState = {
   favorites: FavoriteSakeRecord[];
@@ -61,8 +62,10 @@ export const useFavorites = (): UseFavoritesState => {
       try {
         if (exists) {
           await removeFavorite(draft.id);
+          track('fav_remove', { id: draft.id });
         } else {
           await addFavorite({ ...draft, favoritedAt: now });
+          track('fav_add', { id: draft.id, name: draft.name });
         }
       } catch (error) {
         console.warn('Failed to update favorite status', error);

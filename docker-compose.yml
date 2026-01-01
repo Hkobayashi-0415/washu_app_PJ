@@ -23,16 +23,32 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "18000:8000"
     volumes:
       - ./backend:/app
     environment:
       - DEBUG=True
       - DATABASE_URL=postgresql://washu_user:washu_password@db:5432/washu_db
       - REDIS_URL=redis://redis:6379/0
+      - CORS_ALLOWED_ORIGINS=http://192.168.2.200:5173,http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173
     depends_on:
       - db
       - redis
+    networks:
+      - washu-network
+
+  seed:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://washu_user:washu_password@db:5432/washu_db
+    volumes:
+      - ./backend:/app
+    command: ["python", "-m", "app.scripts.load_seed", "--dir", "/app/seed"]
+    restart: "no"
     networks:
       - washu-network
 
@@ -81,4 +97,3 @@ volumes:
 networks:
   washu-network:
     driver: bridge
-

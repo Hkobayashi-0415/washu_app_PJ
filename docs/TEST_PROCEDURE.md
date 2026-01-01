@@ -1,5 +1,7 @@
 ## テスト実行手順（デモデータ込み）
 
+> 全体概要・トラブルシュートは README を参照。ここでは実行コマンドを簡潔にまとめます。
+
 ### 前提
 - Docker Desktop が起動していること
 - `pnpm` が利用できること
@@ -74,6 +76,7 @@ pnpm run dev -- --host 0.0.0.0 --port 5173
 - ★トグルでお気に入り登録でき、`/favorites` に反映される
 - `/favorites` で削除でき、一覧/詳細の状態が一致する
 - オフラインでも `/recent` と `/favorites` が見える
+  - DevTools の Network → Offline でバナー表示とキャッシュ描画を確認
 
 ---
 
@@ -89,7 +92,24 @@ pnpm run preview -- --host 0.0.0.0 --port 4173
 
 ---
 
-## 7. Lighthouse（任意）
+## 7. ライト E2E（スモーク）
+
+Playwright を使う場合の例。バックエンドが 18000 で起動している前提で preview を同時起動してください。
+
+```bash
+# 別ターミナルで preview: pnpm run build && pnpm run preview -- --host 0.0.0.0 --port 4173
+pnpm dlx playwright test
+```
+
+期待する導線:
+- /search で検索して結果が1件以上表示
+- カードをクリックして /sake/:id が開く
+- ★トグル後に /favorites へ遷移して反映を確認
+- オフライン切替で /favorites が表示される（検索は抑止）
+
+---
+
+## 8. Lighthouse（任意）
 
 ```bash
 cd frontend
@@ -98,8 +118,12 @@ npx --yes lighthouse http://localhost:4173 --preset=desktop --output=html --outp
 
 ---
 
-## トラブルシュート
+## 9. スクリーンショット（任意）
+- `docs/screenshots/` に以下を撮影して保存: A2HS プロンプト、Standalone 起動、/search、/sake/:id、/favorites
 
+---
+
+## トラブルシュート
 - `500` が出る場合: `docker compose logs backend --tail 50` を確認
 - `CORS` の場合: `frontend/.env` の `VITE_API_BASE_URL` が `http://localhost:18000` に合っているか確認
 - `ERR_CONNECTION_REFUSED` の場合: backend/DB が起動しているか確認
