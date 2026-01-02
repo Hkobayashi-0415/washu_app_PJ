@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { track } from '../lib/analytics.ts';
 import { listRecent, type RecentSakeRecord } from '../lib/db.ts';
 import { useNetworkStatus } from '../hooks/useNetworkStatus.ts';
 
@@ -14,6 +15,10 @@ const RecentPage = () => {
   const [items, setItems] = useState<RecentSakeRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+    track('screen_view', { screen: 'recent' });
+  }, []);
+
   const refresh = useCallback(async () => {
     setIsLoading(true);
     const records = await listRecent();
@@ -24,6 +29,12 @@ const RecentPage = () => {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!isOnline) {
+      track('offline_banner_show', { screen: 'recent' });
+    }
+  }, [isOnline]);
 
   const hasItems = items.length > 0;
 

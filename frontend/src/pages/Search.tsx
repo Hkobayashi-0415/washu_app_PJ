@@ -13,6 +13,7 @@ import {
   type SakeSearchResponse,
   type SakeSummary,
 } from '../lib/api.ts';
+import { track } from '../lib/analytics.ts';
 import { useFavorites } from '../hooks/useFavorites.ts';
 import { useNetworkStatus } from '../hooks/useNetworkStatus.ts';
 
@@ -61,6 +62,10 @@ const SearchPage = () => {
     region: regionParam,
     sweetness: '0',
   }));
+
+  useEffect(() => {
+    track('screen_view', { screen: 'search' });
+  }, []);
 
   useEffect(() => {
     setFormState((prev) => {
@@ -133,6 +138,18 @@ const SearchPage = () => {
     return () => window.clearTimeout(timer);
   }, [isOnline, lastChangedAt]);
 
+  useEffect(() => {
+    if (!isOnline) {
+      track('offline_banner_show', { screen: 'search' });
+    }
+  }, [isOnline]);
+
+  useEffect(() => {
+    if (error) {
+      track('error', { screen: 'search', message: error.message });
+    }
+  }, [error]);
+
   const items = useMemo(() => {
     if (!data?.pages) {
       return [];
@@ -164,6 +181,10 @@ const SearchPage = () => {
     if (formState.region) {
       params.set('region', formState.region);
     }
+    track('search_exec', {
+      qLength: trimmed.length,
+      hasRegion: Boolean(formState.region),
+    });
     setSearchParams(params, { replace: true });
   };
 

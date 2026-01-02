@@ -92,3 +92,7 @@ jobs:
         run: pnpm -C frontend exec node -e "require.resolve('localforage')"
       - name: Build frontend
         run: pnpm -C frontend run build
+      - name: Install Playwright browsers
+        run: pnpm -C frontend exec playwright install --with-deps chromium
+      - name: Run Playwright smoke
+        run: pnpm -C frontend exec playwright test

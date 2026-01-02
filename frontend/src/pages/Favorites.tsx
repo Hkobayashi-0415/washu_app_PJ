@@ -1,6 +1,7 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+import { track } from '../lib/analytics.ts';
 import { useFavorites } from '../hooks/useFavorites.ts';
 import { useNetworkStatus } from '../hooks/useNetworkStatus.ts';
 import type { FavoriteSakeRecord } from '../lib/db.ts';
@@ -8,6 +9,16 @@ import type { FavoriteSakeRecord } from '../lib/db.ts';
 const FavoritesPage = () => {
   const { isOnline } = useNetworkStatus();
   const { favorites, isLoading, toggleFavorite, refresh } = useFavorites();
+
+  useEffect(() => {
+    track('screen_view', { screen: 'favorites' });
+  }, []);
+
+  useEffect(() => {
+    if (!isOnline) {
+      track('offline_banner_show', { screen: 'favorites' });
+    }
+  }, [isOnline]);
 
   const handleRemove = useCallback(
     async (record: FavoriteSakeRecord) => {
