@@ -83,12 +83,17 @@ test('search -> detail -> favorites -> offline', async ({ page }) => {
   ).toBeVisible();
 
   await page.getByRole('button', { name: 'お気に入りに追加' }).click();
+  await expect(
+    page.getByRole('button', { name: 'お気に入りから削除' }),
+  ).toBeVisible();
 
   await page.goto('/favorites');
-  await page.getByRole('button', { name: '再読み込み' }).click();
-  await expect(
-    page.getByRole('heading', { level: 2, name: '獺祭' }),
-  ).toBeVisible();
+  const refreshButton = page.getByRole('button', { name: '再読み込み' });
+  const favoriteHeading = page.getByRole('heading', { level: 2, name: '獺祭' });
+  await expect.poll(async () => {
+    await refreshButton.click();
+    return favoriteHeading.count();
+  }).toBeGreaterThan(0);
 
   await page.context().setOffline(true);
   await page.evaluate(() => window.dispatchEvent(new Event('offline')));
