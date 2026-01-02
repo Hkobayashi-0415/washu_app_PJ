@@ -87,7 +87,10 @@ test('search -> detail -> favorites -> offline', async ({ page }) => {
     page.getByRole('button', { name: 'お気に入りから削除' }),
   ).toBeVisible();
 
-  await page.goto('/favorites');
+  await page.getByRole('link', { name: '検索へ戻る' }).click();
+  await expect(page).toHaveURL(/\/search/);
+  await page.getByRole('link', { name: 'お気に入り' }).click();
+  await expect(page).toHaveURL(/\/favorites/);
   const refreshButton = page.getByRole('button', { name: '再読み込み' });
   const favoriteHeading = page.getByRole('heading', { level: 2, name: '獺祭' });
   await expect.poll(async () => {
