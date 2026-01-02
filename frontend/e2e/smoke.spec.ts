@@ -31,6 +31,49 @@ const regionsResponse = {
   regions: ['北海道', '関東', '近畿'],
 };
 
+const ensureFavoriteInDb = async (page: Page) => {
+  const record = {
+    id: sampleSake.id,
+    name: sampleSake.name,
+    brewery: sampleSake.brewery,
+    region: sampleSake.region,
+    imageUrl: sampleSake.image_url ?? undefined,
+    favoritedAt: Date.now(),
+  };
+
+  await page.evaluate(async (payload) => {
+    const openDb = (version?: number) =>
+      new Promise((resolve, reject) => {
+        const request = indexedDB.open('washu-app', version);
+        request.onerror = () => reject(request.error);
+        request.onupgradeneeded = () => {
+          const db = request.result;
+          if (!db.objectStoreNames.contains('favorite_sake')) {
+            db.createObjectStore('favorite_sake');
+          }
+        };
+        request.onsuccess = () => resolve(request.result);
+      });
+
+    let db = await openDb();
+    if (!db.objectStoreNames.contains('favorite_sake')) {
+      const nextVersion = db.version + 1;
+      db.close();
+      db = await openDb(nextVersion);
+    }
+
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('favorite_sake', 'readwrite');
+      tx.oncomplete = () => resolve(undefined);
+      tx.onerror = () => reject(tx.error);
+      tx.onabort = () => reject(tx.error);
+      tx.objectStore('favorite_sake').put(payload, `favorite:${payload.id}`);
+    });
+
+    db.close();
+  }, record);
+};
+
 const mockApi = async (page: Page) => {
   await page.route('**/api/v1/**', async (route) => {
     const url = new URL(route.request().url());
@@ -86,6 +129,7 @@ test('search -> detail -> favorites -> offline', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: 'お気に入りから削除' }),
   ).toBeVisible();
+  await ensureFavoriteInDb(page);
 
   await page.getByRole('link', { name: '検索へ戻る' }).click();
   await expect(page).toHaveURL(/\/search/);
