@@ -1,0 +1,28 @@
+import { defineConfig } from '@playwright/test';
+
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4173';
+
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 60_000,
+  expect: {
+    timeout: 10_000,
+  },
+  retries: process.env.CI ? 1 : 0,
+  use: {
+    baseURL,
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+  },
+  projects: [
+    {
+      name: 'chromium',
+    },
+  ],
+  webServer: {
+    command: 'pnpm run preview -- --host 127.0.0.1 --port 4173',
+    port: 4173,
+    reuseExistingServer: !process.env.CI,
+    timeout: 120_000,
+  },
+});

@@ -1,4 +1,4 @@
-# Washu App (PWA) — Phase 6 MVP
+# Washu App (PWA) - Phase 6 MVP
 
 日本酒との出会いをサポートする Washu App の PWA フロントエンドです。Vite + React + TypeScript をベースに、検索 / 詳細 / 最近見た / お気に入りをオフラインでも扱えるよう IndexedDB を併用しています。
 
@@ -58,11 +58,20 @@ docker compose up -d backend
 ## テスト / チェック
 - Backend: `docker compose run --rm backend sh -c "pip install -r /app/requirements-dev.txt && pytest -q"`
 - Frontend: `docker compose -f docker-compose.dev.yml run --rm frontend pnpm run lint` / `pnpm run typecheck`
-- E2E: Playwright スモーク（検索→詳細→お気に入り→オフライン /favorites）。CI で `pnpm dlx playwright test` を実行する想定。
+- E2E: Playwright スモーク（検索→詳細→お気に入り→オフライン /favorites）。CI で `pnpm exec playwright test` を実行する想定。
 - 詳細手順とコマンドは `docs/TEST_PROCEDURE.md` を参照。
 
+  Node をローカルに入れず Docker で実行する場合（API はモックするため backend 起動は不要）:
+  ```bash
+  # frontend_node_modules の実体は docker volume ls で確認（例: washu_app_pj_frontend_node_modules）
+  docker run --rm -v ${PWD}/frontend:/app \
+    -v washu_app_pj_frontend_node_modules:/app/node_modules \
+    -w /app mcr.microsoft.com/playwright:v1.57.0-jammy \
+    bash -lc "corepack enable && corepack prepare pnpm@9.0.0 --activate && PNPM_CONFIG_PRODUCTION=false pnpm install --frozen-lockfile && pnpm run build && node node_modules/@playwright/test/cli.js test"
+  ```
+
 ## Lighthouse
-本番ビルド (`pnpm run build && pnpm run preview`) を対象にモバイル計測。レポートは `docs/lh/` に保存してください（Performance≥75, Installable Pass, Accessibility/Best Practices/SEO≥90 を目標）。
+本番ビルド (`pnpm run build && pnpm run preview`) を対象にモバイル計測。レポートは `docs/lh/` に保存してください（Performance >= 75, Installable Pass, Accessibility/Best Practices/SEO >= 90 を目標）。
 
 ## スクリーンショット
 `docs/screenshots/` に以下を保存してください（実ファイルはコミット推奨）:
@@ -80,3 +89,5 @@ docker compose up -d backend
 ## 参考リンク
 - テスト手順・環境メモ: `docs/TEST_PROCEDURE.md`
 - 仕様書・設計: `project_overview.md`, `technical_specifications.md`, `ui_ux_design.md`
+
+

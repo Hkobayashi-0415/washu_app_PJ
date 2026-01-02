@@ -94,12 +94,21 @@ pnpm run preview -- --host 0.0.0.0 --port 4173
 
 ## 7. ライト E2E（スモーク）
 
-Playwright を使う場合の例。バックエンドが 18000 で起動している前提で preview を同時起動してください。
+Playwright を使う場合の例。API はテスト内でモックするため backend 起動は不要です。
 
 ```bash
 # 別ターミナルで preview: pnpm run build && pnpm run preview -- --host 0.0.0.0 --port 4173
-pnpm dlx playwright test
+pnpm exec playwright test
 ```
+
+  Node を入れず Docker で実行する場合:
+  ```bash
+  # frontend_node_modules の実体は docker volume ls で確認（例: washu_app_pj_frontend_node_modules）
+  docker run --rm -v ${PWD}/frontend:/app \
+    -v washu_app_pj_frontend_node_modules:/app/node_modules \
+    -w /app mcr.microsoft.com/playwright:v1.57.0-jammy \
+    bash -lc "corepack enable && corepack prepare pnpm@9.0.0 --activate && PNPM_CONFIG_PRODUCTION=false pnpm install --frozen-lockfile && pnpm run build && node node_modules/@playwright/test/cli.js test"
+  ```
 
 期待する導線:
 - /search で検索して結果が1件以上表示
@@ -128,3 +137,5 @@ npx --yes lighthouse http://localhost:4173 --preset=desktop --output=html --outp
 - `CORS` の場合: `frontend/.env` の `VITE_API_BASE_URL` が `http://localhost:18000` に合っているか確認
 - `ERR_CONNECTION_REFUSED` の場合: backend/DB が起動しているか確認
 - `No config file 'C:/Program Files/Git/app/alembic.ini'` の場合: Git Bash のパス変換を回避するため `-c //app/alembic.ini` を使う
+- `DuplicateTable` が出る場合: `docker compose down -v` でDBを作り直すか `alembic stamp head` で現在の状態を記録する
+
