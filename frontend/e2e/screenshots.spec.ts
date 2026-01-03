@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { expect, test, type Page } from '@playwright/test';
 
 import { seedFavoritesInitScript } from './utils/seed-idb';
@@ -26,7 +29,7 @@ const detailResponse = {
   acid: 1.4,
   alcohol: 15,
   taste_tags: ['フルーティ'],
-  description: 'テスト用の説明です。',
+  description: 'スクショ用の説明です。',
 };
 
 const regionsResponse = {
@@ -65,33 +68,30 @@ const mockApi = async (page: Page) => {
   });
 };
 
-test.beforeEach(async ({ context }) => {
-  await context.addInitScript(seedFavoritesInitScript, { favorites: [] });
-});
+const screenshotsDir = path.resolve(process.cwd(), '..', 'docs', 'screenshots');
 
-test('search -> detail -> favorites -> offline', async ({ page }) => {
+test('capture screenshots', async ({ context, page }) => {
+  fs.mkdirSync(screenshotsDir, { recursive: true });
+  await context.addInitScript(seedFavoritesInitScript, { favorites: [] });
   await mockApi(page);
 
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/search');
-
   await page.getByLabel('キーワード').fill('獺祭');
   await page.getByRole('button', { name: '検索する' }).click();
-  await expect(page).toHaveURL(/\/search\?q=/);
-
-  await expect(
-    page.getByRole('heading', { level: 3, name: '獺祭' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: '獺祭' })).toBeVisible();
+  await page.screenshot({
+    path: path.join(screenshotsDir, 'search.png'),
+    fullPage: true,
+  });
 
   await page.getByRole('link', { name: '獺祭' }).first().click();
   await expect(page).toHaveURL(/\/sake\/1$/);
-  await expect(
-    page.getByRole('heading', { level: 1, name: '獺祭' }),
-  ).toBeVisible();
+  await page.screenshot({
+    path: path.join(screenshotsDir, 'detail.png'),
+    fullPage: true,
+  });
 
-  await page.getByRole('button', { name: 'お気に入りに追加' }).click();
-  await expect(
-    page.getByRole('button', { name: 'お気に入りから削除' }),
-  ).toBeVisible();
   await page.evaluate(async (record) => {
     await window.__seedFavorites?.([record]);
   }, {
@@ -103,26 +103,15 @@ test('search -> detail -> favorites -> offline', async ({ page }) => {
     favoritedAt: Date.now(),
   });
 
-  await page.getByRole('link', { name: '検索へ戻る' }).click();
-  await expect(page).toHaveURL(/\/search/);
-  await page.getByRole('link', { name: 'お気に入り' }).click();
-  await expect(page).toHaveURL(/\/favorites/);
+  await page.goto('/favorites');
   const refreshButton = page.getByRole('button', { name: '再読み込み' });
   const favoriteHeading = page.getByRole('heading', { level: 2, name: '獺祭' });
   await expect.poll(async () => {
     await refreshButton.click();
     return favoriteHeading.count();
   }).toBeGreaterThan(0);
-
-  await page.context().setOffline(true);
-  await page.evaluate(() => window.dispatchEvent(new Event('offline')));
-
-  await expect(
-    page.getByText('オフラインでも保存済みのお気に入りは閲覧・削除できます。'),
-  ).toBeVisible();
-
-  await page
-    .getByRole('button', { name: '獺祭をお気に入りから削除' })
-    .click();
-  await expect(page.getByText('まだお気に入りがありません。')).toBeVisible();
+  await page.screenshot({
+    path: path.join(screenshotsDir, 'favorites.png'),
+    fullPage: true,
+  });
 });
