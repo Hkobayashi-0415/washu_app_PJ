@@ -15,6 +15,10 @@ type SeedApi = {
   seedFavorites: (records: FavoriteSeed[]) => Promise<void>;
 };
 
+type SeedPayloadWithRecords = {
+  records: FavoriteSeed[];
+};
+
 declare global {
   interface Window {
     __seedFavorites?: SeedApi['seedFavorites'];
@@ -80,4 +84,54 @@ export const seedFavoritesInitScript = ({ favorites }: SeedPayload) => {
   if (favorites.length > 0) {
     void seedFavorites(favorites);
   }
+};
+
+export const seedFavoritesInPage = async (
+  page: import('@playwright/test').Page,
+  records: FavoriteSeed[],
+) => {
+  await page.waitForFunction(() => typeof window.__seedFavorites === 'function');
+  await page.evaluate(async (payload: SeedPayloadWithRecords) => {
+    if (!window.__seedFavorites) {
+      throw new Error('seed helper is not available');
+    }
+    await window.__seedFavorites(payload.records);
+  }, { records });
+};
+
+export const waitForFavoriteInIdb = async (
+  page: import('@playwright/test').Page,
+  id: number,
+) => {
+  await page.waitForFunction(
+    async (targetId: number) => {
+      const key = `favorite:${targetId}`;
+      const open = indexedDB.open('washu-app');
+      return await new Promise<boolean>((resolve) => {
+        open.onerror = () => resolve(false);
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains('favorite_sake')) {
+            db.close();
+            resolve(false);
+            return;
+          }
+          const tx = db.transaction('favorite_sake', 'readonly');
+          const store = tx.objectStore('favorite_sake');
+          const req = store.get(key);
+          req.onsuccess = () => {
+            const record = req.result as FavoriteSeed | undefined;
+            db.close();
+            resolve(Boolean(record && record.name));
+          };
+          req.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+      });
+    },
+    id,
+    { timeout: 15000 },
+  );
 };

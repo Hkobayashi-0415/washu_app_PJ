@@ -3,8 +3,11 @@ import path from 'node:path';
 
 import { expect, test, type Page } from '@playwright/test';
 
-import { seedFavoritesInitScript } from './utils/seed-idb';
-
+import {
+  seedFavoritesInitScript,
+  seedFavoritesInPage,
+  waitForFavoriteInIdb,
+} from './utils/seed-idb';
 const sampleSake = {
   id: 1,
   name: '獺祭',
@@ -69,10 +72,14 @@ const mockApi = async (page: Page) => {
 };
 
 const screenshotsDir = path.resolve(process.cwd(), '..', 'docs', 'screenshots');
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(seedFavoritesInitScript, {
+    favorites: [],
+  });
+});
 
-test('capture screenshots', async ({ context, page }) => {
+test('capture screenshots', async ({ page }) => {
   fs.mkdirSync(screenshotsDir, { recursive: true });
-  await context.addInitScript(seedFavoritesInitScript, { favorites: [] });
   await mockApi(page);
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -92,24 +99,26 @@ test('capture screenshots', async ({ context, page }) => {
     fullPage: true,
   });
 
-  await page.evaluate(async (record) => {
-    await window.__seedFavorites?.([record]);
-  }, {
+  const favoriteSeed = {
     id: sampleSake.id,
     name: sampleSake.name,
     brewery: sampleSake.brewery,
     region: sampleSake.region,
     imageUrl: sampleSake.image_url ?? undefined,
     favoritedAt: Date.now(),
-  });
+  };
+  await seedFavoritesInPage(page, [favoriteSeed]);
+  await waitForFavoriteInIdb(page, favoriteSeed.id);
 
-  await page.goto('/favorites');
+  await page.getByRole('link', { name: '検索へ戻る' }).click();
+  await expect(page).toHaveURL(/\/search/);
+  await page.getByRole('link', { name: 'お気に入り' }).click();
+  await expect(page).toHaveURL(/\/favorites/);
   const refreshButton = page.getByRole('button', { name: '再読み込み' });
   const favoriteHeading = page.getByRole('heading', { level: 2, name: '獺祭' });
-  await expect.poll(async () => {
-    await refreshButton.click();
-    return favoriteHeading.count();
-  }).toBeGreaterThan(0);
+  await expect(refreshButton).toBeEnabled();
+  await refreshButton.click();
+  await expect(favoriteHeading).toBeVisible();
   await page.screenshot({
     path: path.join(screenshotsDir, 'favorites.png'),
     fullPage: true,

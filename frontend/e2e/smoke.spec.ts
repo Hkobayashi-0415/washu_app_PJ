@@ -1,6 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { seedFavoritesInitScript } from './utils/seed-idb';
+import {
+  seedFavoritesInitScript,
+  seedFavoritesInPage,
+  waitForFavoriteInIdb,
+} from './utils/seed-idb';
 
 const sampleSake = {
   id: 1,
@@ -92,27 +96,26 @@ test('search -> detail -> favorites -> offline', async ({ page }) => {
   await expect(
     page.getByRole('button', { name: 'お気に入りから削除' }),
   ).toBeVisible();
-  await page.evaluate(async (record) => {
-    await window.__seedFavorites?.([record]);
-  }, {
+
+  await page.getByRole('link', { name: '検索へ戻る' }).click();
+  await expect(page).toHaveURL(/\/search/);
+  await page.getByRole('link', { name: 'お気に入り' }).click();
+  await expect(page).toHaveURL(/\/favorites/);
+  const favoriteSeed = {
     id: sampleSake.id,
     name: sampleSake.name,
     brewery: sampleSake.brewery,
     region: sampleSake.region,
     imageUrl: sampleSake.image_url ?? undefined,
     favoritedAt: Date.now(),
-  });
-
-  await page.getByRole('link', { name: '検索へ戻る' }).click();
-  await expect(page).toHaveURL(/\/search/);
-  await page.getByRole('link', { name: 'お気に入り' }).click();
-  await expect(page).toHaveURL(/\/favorites/);
+  };
+  await seedFavoritesInPage(page, [favoriteSeed]);
+  await waitForFavoriteInIdb(page, favoriteSeed.id);
   const refreshButton = page.getByRole('button', { name: '再読み込み' });
   const favoriteHeading = page.getByRole('heading', { level: 2, name: '獺祭' });
-  await expect.poll(async () => {
-    await refreshButton.click();
-    return favoriteHeading.count();
-  }).toBeGreaterThan(0);
+  await expect(refreshButton).toBeEnabled();
+  await refreshButton.click();
+  await expect(favoriteHeading).toBeVisible();
 
   await page.context().setOffline(true);
   await page.evaluate(() => window.dispatchEvent(new Event('offline')));
