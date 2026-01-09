@@ -82,7 +82,7 @@ jobs:
       - name: Configure pnpm node linker
         run: pnpm -C frontend config set node-linker hoisted --location project
       - name: Install dependencies
-        run: pnpm -C frontend install --frozen-lockfile --force
+        run: pnpm -C frontend install --frozen-lockfile
       - name: Inspect installed deps
         run: |
           ls -la frontend/node_modules
@@ -92,7 +92,30 @@ jobs:
         run: pnpm -C frontend exec node -e "require.resolve('localforage')"
       - name: Build frontend
         run: pnpm -C frontend run build
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
       - name: Install Playwright browsers
         run: pnpm -C frontend exec playwright install --with-deps chromium
-      - name: Run Playwright smoke
+      - name: Run Playwright tests
         run: pnpm -C frontend exec playwright test
+      - name: Run Lighthouse (mobile)
+        run: pnpm -C frontend run lh:ci
+      - name: Upload Lighthouse report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-report
+          path: docs/lh/*.html
+          if-no-files-found: warn
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: docs/screenshots/*.png
+          if-no-files-found: warn

@@ -9,7 +9,14 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext ts,tsx --max-warnings=0",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test",
+    "e2e:smoke": "playwright test e2e/smoke.spec.ts",
+    "e2e:screenshots": "playwright test e2e/screenshots.spec.ts",
+    "lh:collect": "lhci collect",
+    "lh:assert": "lhci assert",
+    "lh:upload": "lhci upload",
+    "lh:ci": "lhci collect && lhci assert && lhci upload"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.5",
@@ -20,6 +27,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@lhci/cli": "^0.14.0",
     "@types/react": "^18.3.7",
     "@types/react-dom": "^18.3.0",
     "@playwright/test": "^1.49.1",

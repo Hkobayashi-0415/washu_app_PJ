@@ -1,6 +1,6 @@
 ## テスト実行手順（デモデータ込み）
 
-> 全体概要・トラブルシュートは README を参照。ここでは実行コマンドを簡潔にまとめます。
+> 全体概要・トラブルシュートは README を参照。リリース導線は `docs/RELEASE_GUIDE.md` を参照。ここでは実行コマンドを簡潔にまとめます。
 
 ### 前提
 - Docker Desktop が起動していること
@@ -98,7 +98,7 @@ Playwright を使う場合の例。API はテスト内でモックするため b
 
 ```bash
 # 別ターミナルで preview: pnpm run build && pnpm run preview -- --host 0.0.0.0 --port 4173
-pnpm exec playwright test
+pnpm run e2e
 ```
 
   Node を入れず Docker で実行する場合:
@@ -107,7 +107,7 @@ pnpm exec playwright test
   docker run --rm -v ${PWD}/frontend:/app \
     -v washu_app_pj_frontend_node_modules:/app/node_modules \
     -w /app mcr.microsoft.com/playwright:v1.57.0-jammy \
-    bash -lc "corepack enable && corepack prepare pnpm@9.0.0 --activate && PNPM_CONFIG_PRODUCTION=false pnpm install --frozen-lockfile && pnpm run build && node node_modules/@playwright/test/cli.js test"
+    bash -lc "corepack enable && corepack prepare pnpm@9.0.0 --activate && PNPM_CONFIG_PRODUCTION=false pnpm install --frozen-lockfile && pnpm run build && pnpm run e2e"
   ```
 
 期待する導線:
@@ -116,19 +116,39 @@ pnpm exec playwright test
 - ★トグル後に /favorites へ遷移して反映を確認
 - オフライン切替で /favorites が表示される（検索は抑止）
 
+スクリーンショットのみ取得する場合:
+
+```bash
+pnpm run e2e:screenshots
+```
+
+出力先: `docs/screenshots/`（/search, /sake/:id, /favorites）
+
 ---
 
 ## 8. Lighthouse（任意）
 
 ```bash
 cd frontend
-npx --yes lighthouse http://localhost:4173 --preset=desktop --output=html --output-path=./lighthouse-desktop.html
+pnpm run build
+pnpm run lh:ci
+```
+
+- 設定は `frontend/lighthouserc.cjs`。
+- 出力先は `docs/lh/`。
+
+Docker で実行する場合:
+
+```bash
+docker compose -f docker-compose.dev.yml run --rm frontend pnpm run build
+docker compose -f docker-compose.dev.yml run --rm frontend pnpm run lh:ci
 ```
 
 ---
 
 ## 9. スクリーンショット（任意）
-- `docs/screenshots/` に以下を撮影して保存: A2HS プロンプト、Standalone 起動、/search、/sake/:id、/favorites
+- `docs/screenshots/` に保存: /search、/sake/:id、/favorites は Playwright で自動保存
+- A2HS プロンプト、Standalone 起動は手動で追加
 
 ---
 
