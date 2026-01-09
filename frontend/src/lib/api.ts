@@ -22,7 +22,11 @@ const rawSakeSummarySchema = z.object({
   image_url: z.string().trim().min(1).optional().nullable(),
 });
 
-const rawSakeDetailSchema = rawSakeSummarySchema.extend({
+const rawSakeDetailSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  brewery: z.string(),
+  region: z.string(),
   rice: z.string().optional().nullable(),
   seimaibuai: z.number().optional().nullable(),
   nihonshudo: z.number().optional().nullable(),
@@ -30,6 +34,7 @@ const rawSakeDetailSchema = rawSakeSummarySchema.extend({
   alcohol: z.number().optional().nullable(),
   taste_tags: z.array(z.string()).optional().nullable(),
   description: z.string().optional().nullable(),
+  image_url: z.string().trim().min(1).optional().nullable(),
 });
 
 const rawSearchResponseSchema = z.object({
@@ -98,7 +103,10 @@ const toOptionalValue = <T>(value: T | null | undefined): T | undefined =>
   value === null || value === undefined ? undefined : value;
 
 const mapSakeDetail = (raw: z.infer<typeof rawSakeDetailSchema>): SakeDetail => ({
-  ...mapSakeSummary(raw),
+  id: raw.id,
+  name: raw.name,
+  brewery: raw.brewery,
+  region: raw.region,
   rice: toOptionalValue(raw.rice),
   seimaibuai: toOptionalValue(raw.seimaibuai),
   nihonshudo: toOptionalValue(raw.nihonshudo),
@@ -106,6 +114,7 @@ const mapSakeDetail = (raw: z.infer<typeof rawSakeDetailSchema>): SakeDetail => 
   alcohol: toOptionalValue(raw.alcohol),
   tasteTags: raw.taste_tags ?? [],
   description: toOptionalValue(raw.description),
+  imageUrl: raw.image_url ?? undefined,
 });
 
 const buildUrl = (

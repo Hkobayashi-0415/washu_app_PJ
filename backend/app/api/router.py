@@ -87,6 +87,7 @@ def get_sake_detail(sake_id: int, db: Session = Depends(get_db)):
         name=row.Sake.name,
         brewery=row.Brewery.name,
         region=row.Sake.region,
+        tags=tag_rows,
         rice=row.Sake.rice,
         seimaibuai=row.Sake.seimaibuai,
         nihonshudo=float(row.Sake.nihonshudo) if row.Sake.nihonshudo is not None else None,
@@ -108,4 +109,3 @@ def get_regions(db: Session = Depends(get_db)):
 def get_taste_tags(db: Session = Depends(get_db)):
     rows = db.execute(select(TasteTag.label).order_by(TasteTag.label)).scalars().all()
     return {"tags": rows}
-

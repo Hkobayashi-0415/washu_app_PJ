@@ -16,6 +16,7 @@ class SakeDetail(BaseModel):
     name: str
     brewery: str
     region: str
+    tags: List[str] = []
     rice: Optional[str] = None
     seimaibuai: Optional[int] = None
     nihonshudo: Optional[float] = None
@@ -31,4 +32,3 @@ class SearchResponse(BaseModel):
     page: int
     per_page: int
     total: int
-
