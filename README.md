@@ -109,6 +109,7 @@ pnpm run e2e:screenshots
 ## 参考リンク
 - テスト手順・環境メモ: `docs/TEST_PROCEDURE.md`
 - リリースガイド: `docs/RELEASE_GUIDE.md`
+- ドキュメント運用ルール: `docs/DOCS_MASTER_RULES.md`
 - 仕様書・設計: `project_overview.md`, `technical_specifications.md`, `ui_ux_design.md`
 
 
