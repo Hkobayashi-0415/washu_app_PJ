@@ -153,9 +153,67 @@ docker compose -f docker-compose.dev.yml run --rm frontend pnpm run lh:ci
 ---
 
 ## トラブルシュート
+
+### 一般的なエラー
 - `500` が出る場合: `docker compose logs backend --tail 50` を確認
 - `CORS` の場合: `frontend/.env` の `VITE_API_BASE_URL` が `http://localhost:18000` に合っているか確認
 - `ERR_CONNECTION_REFUSED` の場合: backend/DB が起動しているか確認
 - `No config file 'C:/Program Files/Git/app/alembic.ini'` の場合: Git Bash のパス変換を回避するため `-c //app/alembic.ini` を使う
 - `DuplicateTable` が出る場合: `docker compose down -v` でDBを作り直すか `alembic stamp head` で現在の状態を記録する
 
+### Service Worker の更新
+
+開発中に SW が古いキャッシュを返す場合:
+
+1. **DevTools で強制更新**
+   - Application → Service Workers → 「Update on reload」をチェック
+   - または「Update」ボタンをクリック
+
+2. **キャッシュをクリア**
+   - Application → Storage → 「Clear site data」
+
+3. **再ビルド**
+   ```bash
+   cd frontend
+   pnpm run build
+   pnpm run preview
+   ```
+
+### 依存関係の崩壊時
+
+node_modules が壊れた場合や依存関係のコンフリクト時:
+
+```bash
+# ローカル
+cd frontend
+rm -rf node_modules
+rm -f pnpm-lock.yaml  # 必要に応じて
+pnpm install
+
+# Docker (node_modules ボリュームを使用している場合)
+docker volume rm washu_app_pj_frontend_node_modules
+docker compose -f docker-compose.dev.yml run --rm frontend pnpm install --frozen-lockfile
+```
+
+### node_modules ボリュームの再生成
+
+Docker の名前付きボリュームを使用している場合:
+
+```bash
+# ボリューム名を確認
+docker volume ls | grep node_modules
+
+# ボリュームを削除して再作成
+docker volume rm washu_app_pj_frontend_node_modules
+docker compose -f docker-compose.dev.yml run --rm frontend pnpm install --frozen-lockfile
+```
+
+### pnpm store の問題
+
+pnpm のキャッシュが壊れた場合:
+
+```bash
+pnpm store prune
+rm -rf ~/.pnpm-store  # 完全にクリアする場合
+pnpm install
+```

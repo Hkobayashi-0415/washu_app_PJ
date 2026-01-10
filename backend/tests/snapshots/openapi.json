@@ -251,6 +251,14 @@
             ],
             "title": "Seimaibuai"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tags",
+            "default": []
+          },
           "nihonshudo": {
             "anyOf": [
               {

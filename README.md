@@ -110,6 +110,68 @@ pnpm run e2e:screenshots
 - テスト手順・環境メモ: `docs/TEST_PROCEDURE.md`
 - リリースガイド: `docs/RELEASE_GUIDE.md`
 - ドキュメント運用ルール: `docs/DOCS_MASTER_RULES.md`
+- リリースノート: `docs/release-notes/`
 - 仕様書・設計: `project_overview.md`, `technical_specifications.md`, `ui_ux_design.md`
 
+---
 
+## Release Guide (Preview → Prod)
+
+### Frontend (Cloudflare Pages / Vercel)
+
+1. **ビルド**
+   ```bash
+   cd frontend
+   pnpm run build
+   ```
+
+2. **環境変数設定**
+   - `VITE_API_BASE_URL`: バックエンドの公開 URL (例: `https://api.washu.example.com`)
+
+3. **デプロイ**
+   - Cloudflare Pages: `frontend/dist` をアップロード、または GitHub 連携
+   - Vercel: プロジェクトルートを `frontend` に設定
+
+4. **注意点**
+   - HTTPS 必須（Service Worker の登録に必要）
+   - PWA の `start_url` と `scope` が配信ドメインに一致していることを確認
+   - 404 ページを `index.html` にリダイレクト（SPA 対応）
+
+### Backend (Render / Fly.io)
+
+1. **環境変数設定**
+   ```
+   DATABASE_URL=postgresql+psycopg2://<user>:<pass>@<host>:5432/<db>
+   CORS_ORIGINS=https://washu.example.com
+   CORS_ALLOWED_ORIGINS=https://washu.example.com
+   APP_PORT=8000
+   ```
+
+2. **デプロイ手順**
+   ```bash
+   # Render / Fly.io にデプロイ後
+   alembic -c backend/alembic.ini upgrade head
+   python -m app.scripts.load_seed --dir backend/seed
+   curl https://api.washu.example.com/health
+   ```
+
+3. **確認事項**
+   - `/health` が 200 を返すこと
+   - CORS 設定がフロントエンドの URL と一致していること
+
+### タグ付け (v0.1.0-mvp)
+
+```bash
+# リリース準備が完了したら
+git tag -a v0.1.0-mvp -m "MVP release: Phase 1-6 complete"
+git push origin v0.1.0-mvp
+```
+
+### チェックリスト
+
+- [ ] `pnpm run build` が成功
+- [ ] `pnpm run lh:ci` で Lighthouse 目標達成
+- [ ] `pnpm run e2e` で Playwright スモーク成功
+- [ ] `/health` エンドポイントが 200 を返す
+- [ ] フロントエンドが HTTPS で公開されている
+- [ ] PWA がインストール可能（A2HS）
